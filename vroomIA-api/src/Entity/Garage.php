@@ -21,9 +21,6 @@ class Garage
     private ?string $name = null;
 
     #[ORM\Column(length: 255)]
-    private ?string $lastname = null;
-
-    #[ORM\Column(length: 255)]
     private ?string $phoneNumber = null;
 
     /**
@@ -54,18 +51,6 @@ class Garage
     public function setName(string $name): static
     {
         $this->name = $name;
-
-        return $this;
-    }
-
-    public function getLastname(): ?string
-    {
-        return $this->lastname;
-    }
-
-    public function setLastname(string $lastname): static
-    {
-        $this->lastname = $lastname;
 
         return $this;
     }

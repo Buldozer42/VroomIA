@@ -37,6 +37,9 @@ class Vehicle
     #[ORM\Column(type: Types::DATE_MUTABLE)]
     private ?\DateTime $lastTechnicalInspectionDate = null;
 
+    #[ORM\ManyToOne(inversedBy: 'vehicles')]
+    private ?Person $person = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -122,6 +125,18 @@ class Vehicle
     public function setLastTechnicalInspectionDate(\DateTime $lastTechnicalInspectionDate): static
     {
         $this->lastTechnicalInspectionDate = $lastTechnicalInspectionDate;
+
+        return $this;
+    }
+
+    public function getPerson(): ?Person
+    {
+        return $this->person;
+    }
+
+    public function setPerson(?Person $person): static
+    {
+        $this->person = $person;
 
         return $this;
     }
