@@ -72,11 +72,18 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $companyName = null;
 
+    /**
+     * @var Collection<int, Reservation>
+     */
+    #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'person')]
+    private Collection $reservations;
+
     public function __construct()
     {
         $this->drivers = new ArrayCollection();
         $this->favoriteGarage = new ArrayCollection();
         $this->vehicles = new ArrayCollection();
+        $this->reservations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -304,6 +311,36 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     public function setCompanyName(?string $companyName): static
     {
         $this->companyName = $companyName;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Reservation>
+     */
+    public function getReservations(): Collection
+    {
+        return $this->reservations;
+    }
+
+    public function addReservation(Reservation $reservation): static
+    {
+        if (!$this->reservations->contains($reservation)) {
+            $this->reservations->add($reservation);
+            $reservation->setPerson($this);
+        }
+
+        return $this;
+    }
+
+    public function removeReservation(Reservation $reservation): static
+    {
+        if ($this->reservations->removeElement($reservation)) {
+            // set the owning side to null (unless already changed)
+            if ($reservation->getPerson() === $this) {
+                $reservation->setPerson(null);
+            }
+        }
 
         return $this;
     }

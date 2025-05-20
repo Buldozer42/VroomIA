@@ -34,6 +34,12 @@ class Reservation
     #[ORM\Column(length: 255)]
     private ?string $comment = null;
 
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?Person $person = null;
+
+    #[ORM\ManyToOne(inversedBy: 'reservations')]
+    private ?Garage $garage = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -107,6 +113,30 @@ class Reservation
     public function setComment(string $comment): static
     {
         $this->comment = $comment;
+
+        return $this;
+    }
+
+    public function getPerson(): ?Person
+    {
+        return $this->person;
+    }
+
+    public function setPerson(?Person $person): static
+    {
+        $this->person = $person;
+
+        return $this;
+    }
+
+    public function getGarage(): ?Garage
+    {
+        return $this->garage;
+    }
+
+    public function setGarage(?Garage $garage): static
+    {
+        $this->garage = $garage;
 
         return $this;
     }

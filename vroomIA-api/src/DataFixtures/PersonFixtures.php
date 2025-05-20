@@ -81,7 +81,6 @@ class PersonFixtures extends Fixture implements DependentFixtureInterface
     
     public function getDependencies(): array
     {
-        // Cette fixture dépend de GarageFixtures pour pouvoir associer des garages favoris
         return [
             VehicleFixtures::class,
         ];
