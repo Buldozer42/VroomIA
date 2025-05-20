@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState } from "react";
 import {
   Cog6ToothIcon,
@@ -13,6 +13,8 @@ type Operation = {
   title: string;
   subtitle: string;
   description: string;
+  status: boolean;
+  price: number;
 };
 
 const vehicleData = [
@@ -53,6 +55,8 @@ const operations: Operation[] = [
     subtitle: "Entretien périodique",
     description:
       "La vidange moteur permet de prolonger la durée de vie du véhicule et d’assurer son bon fonctionnement.",
+    status: true,
+    price: 33
   },
   {
     icon: ShieldExclamationIcon,
@@ -60,6 +64,8 @@ const operations: Operation[] = [
     subtitle: "Obligation légale",
     description:
       "Le contrôle technique vérifie les points de sécurité et les normes environnementales du véhicule.",
+    status: false,
+    price: 121
   },
   {
     icon: Cog6ToothIcon,
@@ -67,6 +73,8 @@ const operations: Operation[] = [
     subtitle: "Maintenance constructeur",
     description:
       "Une révision complète selon les recommandations constructeur pour éviter les pannes futures.",
+    status: false,
+    price: 69
   },
   {
     icon: PaintBrushIcon,
@@ -74,6 +82,8 @@ const operations: Operation[] = [
     subtitle: "Réparations esthétiques",
     description:
       "Réparation ou remplacement d’éléments abîmés ou rayés sur votre carrosserie.",
+    status: false,
+    price: 400
   },
   {
     icon: ExclamationTriangleIcon,
@@ -81,6 +91,8 @@ const operations: Operation[] = [
     subtitle: "Recherche de panne",
     description:
       "Analyse électronique complète du moteur pour détecter les anomalies ou messages d’erreur.",
+    status: false,
+    price: 129
   },
 ];
 
@@ -115,6 +127,30 @@ const StepperComponent = () => {
 
   // État modal
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
+  const [ops, setOps] = useState(operations);
+  const handleConfirm = () => {
+    if (selectedOp) {
+      // Passe le statut de l'opération à true (prise en charge)
+      setOps((prev) =>
+        prev.map((op) =>
+          op.title === selectedOp.title ? { ...op, status: true } : op
+        )
+      );
+      setSelectedOp(null);
+    }
+  };
+
+  const handleRemove = () => {
+    if (selectedOp) {
+      // Passe le statut de l'opération à false (non prise en charge)
+      setOps((prev) =>
+        prev.map((op) =>
+          op.title === selectedOp.title ? { ...op, status: false } : op
+        )
+      );
+      setSelectedOp(null);
+    }
+  };
 
   return (
     <>
@@ -178,12 +214,17 @@ const StepperComponent = () => {
             <div className="collapse-content text-sm">
               <div className="max-h-96 overflow-y-auto">
                 <ul className="list bg-base-100 rounded-box shadow-md">
-                  {operations.map((op, index) => {
+                  {ops.map((op, index) => {
                     const Icon = op.icon;
                     return (
                       <li
                         key={index}
-                        className="list-row p-4 flex flex-col sm:flex-row gap-2 cursor-pointer hover:bg-base-200 rounded"
+                        className={`list-row p-4 flex flex-col sm:flex-row gap-2 rounded
+                      ${
+                        op.status
+                          ? "cursor-pointer hover:bg-base-200"
+                          : "opacity-40 cursor-pointer"
+                      }`}
                         onClick={() => setSelectedOp(op)}
                       >
                         <Icon className="w-6 h-8 text-primary" />
@@ -260,6 +301,16 @@ const StepperComponent = () => {
           readOnly
         />
       )}
+      {/* MODAL DAISYUI */}
+      {selectedOp && (
+        <input
+          type="checkbox"
+          id="operation-modal"
+          className="modal-toggle"
+          checked
+          readOnly
+        />
+      )}
       <div className={`modal ${selectedOp ? "modal-open" : ""}`}>
         <div className="modal-box relative">
           <label
@@ -279,6 +330,19 @@ const StepperComponent = () => {
                 {selectedOp.subtitle}
               </p>
               <p>{selectedOp.description}</p>
+
+              <div className="mt-4 flex justify-end gap-2">
+              <p className="text-center ml-auto mt-auto mb-auto ">Price : {selectedOp.price} €</p>
+                {selectedOp.status ? (
+                  <button className="btn btn-error" onClick={handleRemove}>
+                    Supprimer
+                  </button>
+                ) : (
+                  <button className="btn btn-success" onClick={handleConfirm}>
+                    Confirmer
+                  </button>
+                )}
+              </div>
             </>
           )}
         </div>
