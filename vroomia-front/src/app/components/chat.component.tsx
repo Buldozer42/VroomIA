@@ -3,6 +3,39 @@ import React from "react";
 import { useState } from "react";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 
+const simulateAIResponse = (input: string) => {
+  const lower = input.toLowerCase();
+
+  if (lower.includes("frein") || lower.includes("bruit")) {
+    return {
+      type: "multi",
+      content:
+        "Plusieurs causes possibles, sélectionne ce qui semble pertinent :",
+      options: [
+        "Disques de frein usés",
+        "Plaquettes à changer",
+        "Liquide de frein bas",
+        "Autre chose",
+      ],
+    };
+  }
+
+  if (
+    lower.includes("je dois faire la vidange") ||
+    lower.includes("révision")
+  ) {
+    return {
+      type: "binaire",
+      content: "Souhaitez-vous planifier une vidange maintenant ?",
+    };
+  }
+
+  return {
+    type: "texte",
+    content: `Tu as dit : "${input}"`,
+  };
+};
+
 const ChatComponent = () => {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
     []
@@ -11,23 +44,34 @@ const ChatComponent = () => {
 
   const handleSend = () => {
     if (!input.trim()) return;
-
-    // Ajoute le message utilisateur
+  
     const newMessages = [...messages, { role: "user", text: input }];
-
-    // Simule une réponse (à remplacer par un appel à une vraie API)
-    newMessages.push({
-      role: "bot",
-      text: `Tu as dit : "${input}"`,
-    });
-
+  
+    const ai = simulateAIResponse(input);
+  
+    if (ai.type === "multi" && ai.options) {
+      newMessages.push({
+        role: "bot",
+        text:
+          ai.content +
+          "\n" +
+          ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n")
+      });
+    } else {
+      newMessages.push({
+        role: "bot",
+        text: ai.content
+      });
+    }
+  
     setMessages(newMessages);
     setInput("");
   };
+  
 
   return (
-    <main className="h-screen bg-base-200 p-2 flex justify-center items-center">
-      <div className="w-full h-full max-w-xl bg-base-100 rounded-box shadow p-4 flex flex-col p-2">
+    <main className="h-screen w-full bg-base-200 p-2 flex justify-center items-center">
+      <div className="w-full h-full bg-base-100 rounded-box shadow p-4 flex flex-col p-2">
         {/* Titre */}
         <h1 className="text-2xl font-bold text-left mb-4 font-racing">
           VroomIA

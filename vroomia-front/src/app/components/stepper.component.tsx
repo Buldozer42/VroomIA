@@ -154,8 +154,8 @@ const StepperComponent = () => {
 
   return (
     <>
-      <section className="min-h-screen bg-base-200 p-2 flex justify-center items-start overflow-y-auto">
-        <div className="w-full max-w-xl bg-base-100 rounded-box shadow p-4 flex flex-col space-y-4">
+      <section className="min-h-screen bg-base-200 sm:p-2 flex justify-center items-start overflow-y-auto">
+        <div className="w-full bg-base-100 rounded-box shadow p-0 flex flex-col">
           {/* VEHICULE */}
           <div className="collapse collapse-plus border border-base-300">
             <input type="radio" name="accordion-stepper" defaultChecked />
@@ -184,15 +184,16 @@ const StepperComponent = () => {
                 <div key={index} className="flex gap-2 items-start mb-1">
                   <p className="w-40 font-medium">{item.label}</p>
                   <span>:</span>
-                  <div>
+                  <div className="w-full max-w-xs break-words">
                     {item.label === "Site web" ? (
                       <a
                         href={item.value}
-                        className="text-blue-600 underline break-all"
+                        className="text-blue-600 underline break-words whitespace-pre-wrap overflow-hidden overflow-ellipsis"
+                        style={{ wordBreak: "break-word", overflowWrap: "break-word", wordWrap: "break-word" }}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
-                        {item.value}
+                     
                       </a>
                     ) : item.label === "Horaire" ? (
                       item.value

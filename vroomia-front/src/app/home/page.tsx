@@ -5,15 +5,15 @@ import Navbar from "../components/navbar.component";
 
 const Home = () => {
   return (
-    <div className="flex flex-column w-screen ">
-      <div className="w-1/2 h-screen border-solid border-1-[#A9A9A9] box-border">
+    <div className="flex flex-column w-screen overflow-y-hidden sm:overflow-y-auto">
+      <div className="w-full lg:w-1/2 h-screen box-border">
         <ChatComponent />
       </div>
-      <div className="w-1/2 border-solid border-1-[#A9A9A9] box-border">
+      <div className="w-1/2 border-solid border-1-[#A9A9A9] box-border hidden lg:block">
         <StepperComponent />
       </div>
-      <div className="w-15">
-        <Navbar/>
+      <div className="w-15 box-border">
+        <Navbar />
       </div>
     </div>
   );
