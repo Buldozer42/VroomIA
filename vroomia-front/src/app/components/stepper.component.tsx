@@ -1,12 +1,9 @@
 "use client";
 import React, { useState } from "react";
-import {
-  Cog6ToothIcon,
-  ShieldExclamationIcon,
-  WrenchIcon,
-  PaintBrushIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import operations from "../data/operationsData";
+import vehicleData from "../data/vehiclesData";
+import garageInfo from "../data/garageData";
+import appointments from "../data/appointmentsData";
 
 type Operation = {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -17,84 +14,6 @@ type Operation = {
   price: number;
 };
 
-const vehicleData = [
-  { label: "Immatriculation", value: "BF-678-AF" },
-  { label: "Marque", value: "BMW" },
-  { label: "Gamme et Modèle", value: "Série 8" },
-  { label: "Motorisation", value: "200d" },
-  { label: "N°CINT", value: "XXX" },
-  { label: "Energie", value: "Diesel" },
-  { label: "Date de mise en circulation", value: "15/06/2020" },
-];
-
-const garageInfo = [
-  { label: "Nom", value: "Volkswagen Lyon Sud - Groupe Central Autos" },
-  { label: "Adresse", value: "51 Bd Lucien Sampaix, 69190 Saint-Fons" },
-  { label: "Téléphone", value: "04 72 28 96 96" },
-  {
-    label: "Site web",
-    value:
-      "https://www.volkswagen.fr/fr/partenaire/centralautos-saintfons.html",
-  },
-  {
-    label: "Horaire",
-    value: `lundi 08:00–12:00, 14:00–19:00
-mardi 08:00–12:00, 14:00–19:00
-mercredi 08:00–12:00, 14:00–19:00
-jeudi 08:00–12:00, 14:00–19:00
-vendredi 08:00–12:00, 14:00–19:00
-samedi 09:00–12:00, 14:00–18:00
-dimanche Fermé`,
-  },
-];
-
-const operations: Operation[] = [
-  {
-    icon: WrenchIcon,
-    title: "Vidange",
-    subtitle: "Entretien périodique",
-    description:
-      "La vidange moteur permet de prolonger la durée de vie du véhicule et d’assurer son bon fonctionnement.",
-    status: true,
-    price: 33
-  },
-  {
-    icon: ShieldExclamationIcon,
-    title: "Contrôle technique",
-    subtitle: "Obligation légale",
-    description:
-      "Le contrôle technique vérifie les points de sécurité et les normes environnementales du véhicule.",
-    status: false,
-    price: 121
-  },
-  {
-    icon: Cog6ToothIcon,
-    title: "Révision",
-    subtitle: "Maintenance constructeur",
-    description:
-      "Une révision complète selon les recommandations constructeur pour éviter les pannes futures.",
-    status: false,
-    price: 69
-  },
-  {
-    icon: PaintBrushIcon,
-    title: "Carrosserie",
-    subtitle: "Réparations esthétiques",
-    description:
-      "Réparation ou remplacement d’éléments abîmés ou rayés sur votre carrosserie.",
-    status: false,
-    price: 400
-  },
-  {
-    icon: ExclamationTriangleIcon,
-    title: "Diagnostic moteur",
-    subtitle: "Recherche de panne",
-    description:
-      "Analyse électronique complète du moteur pour détecter les anomalies ou messages d’erreur.",
-    status: false,
-    price: 129
-  },
-];
 
 const StepperComponent = () => {
   const CheckIcon = () => (
@@ -114,16 +33,7 @@ const StepperComponent = () => {
     </svg>
   );
 
-  const appointments = [
-    {
-      operations: "Vidange",
-      startDate: "12/06/2025",
-      endDate: "17/06/2025",
-      comments:
-        "Veuillez-vous munir de votre carte grise et les clés du véhicule",
-      price: "99$",
-    },
-  ];
+
 
   // État modal
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);

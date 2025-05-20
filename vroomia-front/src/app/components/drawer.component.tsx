@@ -9,60 +9,13 @@ import {
   ArrowUturnLeftIcon,
 } from "@heroicons/react/24/outline";
 import StepperComponent from "./stepper.component";
+import nextRdvList from "./nextAppointmentList";
+import previousRdvList from "./previousAppointmentsList";
+import userInfo from "../data/userData";
+import garageInfo from "../data/garageData";
 
 const Drawer = () => {
   const [selectedTab, setSelectedTab] = useState("profile");
-
-  const previousRdvList = [
-    {
-      date: "Lundi 7 Octobre 2023",
-      vehicule: "BMW",
-      concessionnaire: "VW Lyon Sud",
-      operations: ["Vidange", "Polish"],
-    },
-    {
-      date: "Lundi 7 Octobre 2023",
-      vehicule: "BMW",
-      concessionnaire: "VW Lyon Sud",
-      operations: ["Vidange", "Polish"],
-    },
-  ];
-
-  const nextRdvList = [
-    {
-      date: "Lundi 23 juin 2025",
-      vehicule: "BMW",
-      concessionnaire: "VW Lyon Sud",
-      operations: ["Vidange", "Polish"],
-    },
-    {
-      date: "Lundi 23 juin 2025",
-      vehicule: "BMW",
-      concessionnaire: "VW Lyon Sud",
-      operations: ["Vidange", "Polish"],
-    },
-  ];
-
-  const garageInfo = [
-    { label: "Nom", value: "Volkswagen Lyon Sud - Groupe Central Autos" },
-    { label: "Adresse", value: "51 Bd Lucien Sampaix, 69190 Saint-Fons" },
-    { label: "Téléphone", value: "04 72 28 96 96" },
-    {
-      label: "Site web",
-      value:
-        "https://www.volkswagen.fr/fr/partenaire/centralautos-saintfons.html",
-    },
-    {
-      label: "Horaire",
-      value: `lundi 08:00–12:00, 14:00–19:00
-      mardi 08:00–12:00, 14:00–19:00
-      mercredi 08:00–12:00, 14:00–19:00
-      jeudi 08:00–12:00, 14:00–19:00
-      vendredi 08:00–12:00, 14:00–19:00
-      samedi 09:00–12:00, 14:00–18:00
-      dimanche Fermé`,
-    },
-  ];
 
   const renderContent = () => {
     switch (selectedTab) {
@@ -70,6 +23,19 @@ const Drawer = () => {
         return (
           <>
             <h2 className="text-2xl font-bold mb-4">Profil</h2>
+            <h3 className="text-xl font-bold mb-4">Vos coordonnées</h3>
+            <div className="bg-base-100 p-6 rounded shadow">
+              <ul className="space-y-4">
+                {userInfo.map((item, index) => (
+                  <li key={index}>
+                    <p>
+                      <span className="font-semibold">{item.label} :</span>{" "}
+                      {item.value}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <br />
             <h3 className="text-xl font-bold mb-4">Votre garage préféré</h3>
             <div className="bg-base-100 p-6 rounded shadow">
@@ -83,9 +49,7 @@ const Drawer = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 underline"
-                      >
-             
-                      </a>
+                      ></a>
                     ) : item.label === "Horaire" ? (
                       <pre className="whitespace-pre-wrap text-sm text-gray-700 mt-1">
                         {item.value}
@@ -156,7 +120,9 @@ const Drawer = () => {
     setSelectedTab(tab);
 
     // Fermer le drawer après le clic
-    const drawerCheckbox = document.getElementById("my-drawer") as HTMLInputElement;
+    const drawerCheckbox = document.getElementById(
+      "my-drawer"
+    ) as HTMLInputElement;
     if (drawerCheckbox) drawerCheckbox.checked = false;
   };
 
