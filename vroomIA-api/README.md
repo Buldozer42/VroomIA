@@ -28,13 +28,20 @@ composer install
 
 3. Configurer l'environnement :
    - Configurez les paramètres de connexion à la base de données dans `.env.local`
+   - Configurer la clé API dans le fichier `.env.local` :
 
-4. Créer la base de données :
+```bash
+DATABASE_URL="mysql://<user>:<password>@127.0.0.1:3306/vroomia?serverVersion=8&charset=utf8mb4"
+
+GEMINI_API_KEY="<your_gemini_api_key>"
+```
+
+1. Créer la base de données :
 ```bash
 php bin/console doctrine:database:create
 ```
 
-5. Exécuter les migrations :
+1. Exécuter les migrations :
 ```bash
 php bin/console doctrine:migrations:migrate
 ```
