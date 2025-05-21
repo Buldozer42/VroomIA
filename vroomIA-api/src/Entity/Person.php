@@ -78,12 +78,19 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Reservation::class, mappedBy: 'person')]
     private Collection $reservations;
 
+    /**
+     * @var Collection<int, Conversation>
+     */
+    #[ORM\OneToMany(targetEntity: Conversation::class, mappedBy: 'person')]
+    private Collection $conversations;
+
     public function __construct()
     {
         $this->drivers = new ArrayCollection();
         $this->favoriteGarage = new ArrayCollection();
         $this->vehicles = new ArrayCollection();
         $this->reservations = new ArrayCollection();
+        $this->conversations = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -339,6 +346,36 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($reservation->getPerson() === $this) {
                 $reservation->setPerson(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Conversation>
+     */
+    public function getConversations(): Collection
+    {
+        return $this->conversations;
+    }
+
+    public function addConversation(Conversation $conversation): static
+    {
+        if (!$this->conversations->contains($conversation)) {
+            $this->conversations->add($conversation);
+            $conversation->setPerson($this);
+        }
+
+        return $this;
+    }
+
+    public function removeConversation(Conversation $conversation): static
+    {
+        if ($this->conversations->removeElement($conversation)) {
+            // set the owning side to null (unless already changed)
+            if ($conversation->getPerson() === $this) {
+                $conversation->setPerson(null);
             }
         }
 

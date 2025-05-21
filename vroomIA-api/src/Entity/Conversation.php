@@ -21,6 +21,9 @@ class Conversation
     #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'conversation')]
     private Collection $messages;
 
+    #[ORM\ManyToOne(inversedBy: 'conversations')]
+    private ?Person $person = null;
+
     public function __construct()
     {
         $this->messages = new ArrayCollection();
@@ -79,5 +82,17 @@ class Conversation
         }
 
         return $messages;
+    }
+
+    public function getPerson(): ?Person
+    {
+        return $this->person;
+    }
+
+    public function setPerson(?Person $person): static
+    {
+        $this->person = $person;
+
+        return $this;
     }
 }
