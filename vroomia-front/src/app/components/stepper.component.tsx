@@ -4,7 +4,12 @@ import operations from "../data/operationsData";
 import vehicleData from "../data/vehiclesData";
 import garageInfo from "../data/garageData";
 import appointments from "../data/appointmentsData";
-import { IdentificationIcon, WrenchScrewdriverIcon, ShoppingBagIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
+import {
+  IdentificationIcon,
+  WrenchScrewdriverIcon,
+  ShoppingBagIcon,
+  CalendarDaysIcon,
+} from "@heroicons/react/24/outline";
 
 type Operation = {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -73,10 +78,51 @@ const StepperComponent = () => {
             </div>
             <div className="collapse-content text-sm space-y-1">
               {vehicleData.map((item, index) => (
-                <div key={index} className="flex gap-2">
-                  <p className="font-medium w-40">{item.label}</p>
-                  <span>:</span>
-                  <p>{item.value}</p>
+                <div key={index} className="space-y-1">
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Immatriculation</p>
+                    <span>:</span>
+                    <p>{item.immatriculation}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Marque</p>
+                    <span>:</span>
+                    <p>{item.marque}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Modèle</p>
+                    <span>:</span>
+                    <p>{item.model}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Année</p>
+                    <span>:</span>
+                    <p>{item.year}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">VIN</p>
+                    <span>:</span>
+                    <p>{item.vin}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Kilométrage</p>
+                    <span>:</span>
+                    <p>{item.mileage} km</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <p className="font-medium w-40">Dernière inspection</p>
+                    <span>:</span>
+                    <p>
+                      {item.lastTechnicalInspectionDate.toLocaleDateString(
+                        "fr-FR",
+                        {
+                          day: "2-digit",
+                          month: "long",
+                          year: "numeric",
+                        }
+                      )}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
@@ -167,9 +213,7 @@ const StepperComponent = () => {
             <input type="radio" name="accordion-stepper" />
             <div className="collapse-title font-semibold flex flex-row">
               <CalendarDaysIcon className="w-6" />{" "}
-              <p className="pl-2 mt-auto mb-auto">
-                VOTRE RENDEZ-VOUS
-              </p>
+              <p className="pl-2 mt-auto mb-auto">VOTRE RENDEZ-VOUS</p>
             </div>
             <div className="collapse-content text-sm">
               <div className="card w-full bg-base-100 shadow">
@@ -179,21 +223,37 @@ const StepperComponent = () => {
                   </span>
                   <div className="flex justify-between">
                     <h2 className="text-3xl font-bold">Premium</h2>
-                    <span className="text-xl">{appointments[0].price}</span>
+                    <span className="text-xl">{appointments[0].price}$</span>
                   </div>
                   {appointments.map((appointment, index) => (
-                    <ul key={index}>
+                    <ul key={index} className="space-y-2 mt-4">
                       <li className="flex items-center">
                         <CheckIcon />
-                        <span>Opération(s) : {appointment.operations}</span>
+                        <span>
+                          Opération(s) : {appointment.operations.join(", ")}
+                        </span>
                       </li>
                       <li className="flex items-center">
                         <CheckIcon />
-                        <span>Date de début : {appointment.startDate}</span>
+                        <span>
+                          Date de début :{" "}
+                          {appointment.startDate.toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
                       </li>
                       <li className="flex items-center">
                         <CheckIcon />
-                        <span>Date de fin : {appointment.endDate}</span>
+                        <span>
+                          Date de fin :{" "}
+                          {appointment.endDate.toLocaleDateString("fr-FR", {
+                            day: "2-digit",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
                       </li>
                       <li className="flex items-center">
                         <CheckIcon />
@@ -201,6 +261,7 @@ const StepperComponent = () => {
                       </li>
                     </ul>
                   ))}
+
                   <div className="mt-6">
                     <button className="btn btn-success btn-block">
                       Confirmer le rendez-vous
