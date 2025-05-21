@@ -1,6 +1,6 @@
 "use client";
-import React from "react";
-import { useState } from "react";
+import React, { use } from "react";
+import { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { addGarageEntry } from "../store/slices/garageSlice";
@@ -8,8 +8,6 @@ import { addAppointment } from "../store/slices/appointmentsSlice";
 
 const simulateAIResponse = (input: string) => {
   const lower = input.toLowerCase();
-  
-
   if (lower.includes("frein") || lower.includes("bruit")) {
     return {
       type: "multi",
@@ -54,6 +52,27 @@ const ChatComponent = () => {
     );
   };
 
+  const [conversationId, setConversationId] = useState("");
+
+  useEffect(() => {
+    const fetchConversation = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/gemini/conversation/new/26");
+        const data = await response.json();
+        if (data.error) {
+          console.error("Erreur du backend:", data.error);
+        } else {
+          console.log("Réponse du backend:", data.conversationId);
+        }
+        setConversationId(data.conversationId);
+      } catch (error) {
+        console.error("Erreur lors de la récupération des messages:", error);
+      }
+    };
+
+    fetchConversation();
+  }, []);
+
   const dispatch = useDispatch();
   const simulateGarageAdd = () => {
     dispatch(
@@ -90,14 +109,22 @@ const ChatComponent = () => {
   
     // 🔄 Envoi du message au backend
     try {
-      await fetch("http://localhost:8000/api/messages", {
+       const response = await fetch("http://localhost:8000/api/gemini/message/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: input }),
+        body: JSON.stringify({ 
+            messageContent: input,
+            conversationId: conversationId,
+          }),
       });
-      console.log("Message envoyé au backend !");
+      const data = await response.json();
+      if (data.error) {
+        console.error("Erreur du backend:", data.error);
+      } else {
+        console.log("Réponse du backend:", data.geminiMessage);
+      }
     } catch (error) {
       console.error("Erreur lors de l'envoi au backend:", error);
     }
