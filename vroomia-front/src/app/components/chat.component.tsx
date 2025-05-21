@@ -81,44 +81,58 @@ const ChatComponent = () => {
   );
   const [input, setInput] = useState("");
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!input.trim()) return;
   
     const newMessages = [...messages, { role: "user", text: input }];
+    setMessages(newMessages); // Affiche immédiatement le message utilisateur
+    setInput("");
   
-    if (input.toLowerCase().includes("garage")) {
+    // 🔄 Envoi du message au backend
+    try {
+      await fetch("http://localhost:8000/api/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: input }),
+      });
+      console.log("Message envoyé au backend !");
+    } catch (error) {
+      console.error("Erreur lors de l'envoi au backend:", error);
+    }
+  
+    // 🔁 Logique locale (simulations)
+    const lowerInput = input.toLowerCase();
+  
+    if (lowerInput.includes("garage")) {
       simulateGarageAdd();
-      newMessages.push({
-        role: "bot",
-        text: "Garage ajouté ! ✅",
-      });
-    } else if (input.toLowerCase().includes("rendez-vous")) {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Garage ajouté ! ✅" },
+      ]);
+    } else if (lowerInput.includes("rendez-vous")) {
       simulateAppointmentAdd();
-      newMessages.push({
-        role: "bot",
-        text: "Rendez-vous ajouté ! 📅✅",
-      });
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
+      ]);
     } else {
       const ai = simulateAIResponse(input);
   
-      if (ai.type === "multi" && ai.options) {
-        newMessages.push({
+      setMessages((prev) => [
+        ...prev,
+        {
           role: "bot",
           text:
-            ai.content +
-            "\n" +
-            ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n"),
-        });
-      } else {
-        newMessages.push({
-          role: "bot",
-          text: ai.content,
-        });
-      }
+            ai.type === "multi" && ai.options
+              ? ai.content +
+                "\n" +
+                ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n")
+              : ai.content,
+        },
+      ]);
     }
-  
-    setMessages(newMessages);
-    setInput("");
   };
   
   
@@ -151,7 +165,7 @@ const ChatComponent = () => {
             </div>
           ))}
         </div>
-
+        <p className="bg-gray-200 p-4 rounded-3xl text-xs text-black-200 mb-2">Veuillez-nous renseigner votre problème : bruits moteurs, voyants, quel types de prestations vous voulez : vidange, contrôle technique etc</p>
         <div className="relative w-full">
           <input
             type="text"
