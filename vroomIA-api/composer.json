@@ -81,6 +81,8 @@
         }
     },
     "require-dev": {
+        "symfony/maker-bundle": "^1.63",
+        "symfony/web-profiler-bundle": "6.4.*",
         "doctrine/doctrine-fixtures-bundle": "^4.1",
         "fakerphp/faker": "^1.24",
         "symfony/maker-bundle": "^1.63"
