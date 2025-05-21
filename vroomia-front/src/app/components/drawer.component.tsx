@@ -137,7 +137,7 @@ const Drawer = () => {
 
       <div className="drawer-side">
         <label htmlFor="my-drawer" className="drawer-overlay"></label>
-        <div className="flex h-full xs:w-full xl:w-1/2 bg-base-200 text-base-content">
+        <div className="flex h-full w-[500px] bg-base-200 text-base-content">
           {/* Sidebar */}
           <nav className="w-15 md:w-20 bg-base-300 p-4 flex flex-col gap-4 items-center relative">
             {/* Mobile only button */}
