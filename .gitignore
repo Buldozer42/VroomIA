@@ -1,2 +1,3 @@
 /vroomIA-api/config/jwt/private.pem
 /vroomIA-api/config/jwt/public.pem
+node_modules/
