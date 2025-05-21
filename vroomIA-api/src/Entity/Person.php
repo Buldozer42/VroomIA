@@ -9,6 +9,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ApiResource]
 #[ORM\Entity(repositoryClass: PersonRepository::class)]
@@ -36,6 +37,7 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 25)]
+    #[Assert\Choice(choices: ['Mr','Mme','Companie'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
@@ -60,7 +62,7 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     private Collection $favoriteGarage;
 
     #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Adress $adress = null;
 
     /**
