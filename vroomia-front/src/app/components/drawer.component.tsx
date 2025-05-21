@@ -24,7 +24,7 @@ const Drawer = () => {
           <>
             <h2 className="text-2xl font-bold mb-4">Profil</h2>
             <h3 className="text-xl font-bold mb-4">Vos coordonnées</h3>
-            <div className="bg-base-100 p-6 rounded shadow">
+            <div className="bg-base-100 p-6 rounded-xl shadow">
               <ul className="space-y-4">
                 {userInfo.map((item, index) => (
                   <li key={index}>
@@ -38,7 +38,7 @@ const Drawer = () => {
             </div>
             <br />
             <h3 className="text-xl font-bold mb-4">Votre garage préféré</h3>
-            <div className="bg-base-100 p-6 rounded shadow">
+            <div className="bg-base-100 p-6 rounded-xl shadow">
               <ul className="space-y-4">
                 {garageInfo.map((item, index) => (
                   <li key={index}>
@@ -70,7 +70,7 @@ const Drawer = () => {
             <h3 className="text-xl font-bold mb-4">Vos prochain rendez-vous</h3>
             <ul className="space-y-4">
               {nextRdvList.map((rdv, index) => (
-                <li key={index} className="p-4 rounded bg-base-100 shadow">
+                <li key={index} className="p-4 rounded-xl bg-base-100 shadow">
                   <p className="font-bold">{rdv.date}</p>
                   <p>Véhicule : {rdv.vehicule}</p>
                   <p>Concessionnaire : {rdv.concessionnaire}</p>
@@ -87,7 +87,7 @@ const Drawer = () => {
             <h3 className="text-xl font-bold mb-4">Vos rendez-vous passés</h3>
             <ul className="space-y-4">
               {previousRdvList.map((rdv, index) => (
-                <li key={index} className="p-4 rounded bg-base-100 shadow">
+                <li key={index} className="p-4 rounded-xl bg-base-100 shadow">
                   <p className="font-bold">{rdv.date}</p>
                   <p>Véhicule : {rdv.vehicule}</p>
                   <p>Concessionnaire : {rdv.concessionnaire}</p>

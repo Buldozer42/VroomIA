@@ -4,6 +4,7 @@ import operations from "../data/operationsData";
 import vehicleData from "../data/vehiclesData";
 import garageInfo from "../data/garageData";
 import appointments from "../data/appointmentsData";
+import { IdentificationIcon, WrenchScrewdriverIcon, ShoppingBagIcon, CalendarDaysIcon } from "@heroicons/react/24/outline";
 
 type Operation = {
   icon: React.FC<React.SVGProps<SVGSVGElement>>;
@@ -13,7 +14,6 @@ type Operation = {
   status: boolean;
   price: number;
 };
-
 
 const StepperComponent = () => {
   const CheckIcon = () => (
@@ -32,8 +32,6 @@ const StepperComponent = () => {
       />
     </svg>
   );
-
-
 
   // État modal
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
@@ -69,8 +67,9 @@ const StepperComponent = () => {
           {/* VEHICULE */}
           <div className="collapse collapse-plus border border-base-300">
             <input type="radio" name="accordion-stepper" defaultChecked />
-            <div className="collapse-title font-semibold">
-              IDENTIFICATION DU VÉHICULE
+            <div className="collapse-title font-semibold flex flex-row">
+              <IdentificationIcon className="w-6" />{" "}
+              <p className="pl-2 mt-auto mb-auto">IDENTIFICATION DU VÉHICULE</p>
             </div>
             <div className="collapse-content text-sm space-y-1">
               {vehicleData.map((item, index) => (
@@ -86,8 +85,11 @@ const StepperComponent = () => {
           {/* GARAGE */}
           <div className="collapse collapse-plus border border-base-300">
             <input type="radio" name="accordion-stepper" />
-            <div className="collapse-title font-semibold">
-              VOTRE CONCESSIONNAIRE/RÉPARATEUR AGRÉÉ
+            <div className="collapse-title font-semibold flex flex-row">
+              <WrenchScrewdriverIcon className="w-6" />{" "}
+              <p className="pl-2 mt-auto mb-auto">
+                VOTRE CONCESSIONNAIRE/RÉPARATEUR AGRÉÉ
+              </p>
             </div>
             <div className="collapse-content text-sm space-y-1">
               {garageInfo.map((item, index) => (
@@ -99,12 +101,14 @@ const StepperComponent = () => {
                       <a
                         href={item.value}
                         className="text-blue-600 underline break-words whitespace-pre-wrap overflow-hidden overflow-ellipsis"
-                        style={{ wordBreak: "break-word", overflowWrap: "break-word", wordWrap: "break-word" }}
+                        style={{
+                          wordBreak: "break-word",
+                          overflowWrap: "break-word",
+                          wordWrap: "break-word",
+                        }}
                         target="_blank"
                         rel="noopener noreferrer"
-                      >
-                     
-                      </a>
+                      ></a>
                     ) : item.label === "Horaire" ? (
                       item.value
                         .split("\n")
@@ -121,7 +125,11 @@ const StepperComponent = () => {
           {/* PANIER (opérations cliquables) */}
           <div className="collapse collapse-plus border border-base-300">
             <input type="radio" name="accordion-stepper" />
-            <div className="collapse-title font-semibold">VOTRE PANIER</div>
+            <div className="collapse-title font-semibold flex flex-row">
+              {" "}
+              <ShoppingBagIcon className="w-6" />{" "}
+              <p className="pl-2 mt-auto mb-auto">VOTRE PANIER</p>
+            </div>
             <div className="collapse-content text-sm">
               <div className="max-h-96 overflow-y-auto">
                 <ul className="list bg-base-100 rounded-box shadow-md">
@@ -157,8 +165,11 @@ const StepperComponent = () => {
           {/* RENDEZ-VOUS */}
           <div className="collapse collapse-plus border border-base-300">
             <input type="radio" name="accordion-stepper" />
-            <div className="collapse-title font-semibold">
-              VOTRE RENDEZ-VOUS
+            <div className="collapse-title font-semibold flex flex-row">
+              <CalendarDaysIcon className="w-6" />{" "}
+              <p className="pl-2 mt-auto mb-auto">
+                VOTRE RENDEZ-VOUS
+              </p>
             </div>
             <div className="collapse-content text-sm">
               <div className="card w-full bg-base-100 shadow">
@@ -243,7 +254,9 @@ const StepperComponent = () => {
               <p>{selectedOp.description}</p>
 
               <div className="mt-4 flex justify-end gap-2">
-              <p className="text-center ml-auto mt-auto mb-auto ">Price : {selectedOp.price} €</p>
+                <p className="text-center ml-auto mt-auto mb-auto ">
+                  Price : {selectedOp.price} €
+                </p>
                 {selectedOp.status ? (
                   <button className="btn btn-error" onClick={handleRemove}>
                     Supprimer

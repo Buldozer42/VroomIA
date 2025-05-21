@@ -90,7 +90,7 @@ const ChatComponent = () => {
                 className={`rounded-3xl px-4 py-2 max-w-xs shadow ${
                   msg.role === "user"
                     ? "bg-white-500 text-black"
-                    : "bg-grey-800 text-black"
+                    : "bg-gray-200 text-black"
                 }`}
               >
                 {msg.text}
