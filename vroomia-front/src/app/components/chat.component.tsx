@@ -1,10 +1,14 @@
 "use client";
 import React from "react";
 import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import { addGarageEntry } from "../store/slices/garageSlice";
+import { addAppointment } from "../store/slices/appointmentsSlice";
 
 const simulateAIResponse = (input: string) => {
   const lower = input.toLowerCase();
+  
 
   if (lower.includes("frein") || lower.includes("bruit")) {
     return {
@@ -37,6 +41,41 @@ const simulateAIResponse = (input: string) => {
 };
 
 const ChatComponent = () => {
+
+  const simulateAppointmentAdd = () => {
+    dispatch(
+      addAppointment({
+        operations: ["Révision", "Freinage"],
+        startDate: new Date("2025-06-20"),
+        endDate: new Date("2025-06-22"),
+        comments: "Merci d'arriver 10 minutes en avance.",
+        price: 250,
+      })
+    );
+  };
+
+  const dispatch = useDispatch();
+  const simulateGarageAdd = () => {
+    dispatch(
+      addGarageEntry({
+        label: "Nom du garage",
+        value: "Garage du Centre",
+      })
+    );
+    dispatch(
+      addGarageEntry({
+        label: "Téléphone",
+        value: "01 23 45 67 89",
+      })
+    );
+    dispatch(
+      addGarageEntry({
+        label: "Adresse",
+        value: "12 rue des Mécanos, 75000 Paris",
+      })
+    );
+  };
+
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
     []
   );
@@ -47,28 +86,42 @@ const ChatComponent = () => {
   
     const newMessages = [...messages, { role: "user", text: input }];
   
-    const ai = simulateAIResponse(input);
-  
-    if (ai.type === "multi" && ai.options) {
+    if (input.toLowerCase().includes("garage")) {
+      simulateGarageAdd();
       newMessages.push({
         role: "bot",
-        text:
-          ai.content +
-          "\n" +
-          ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n")
+        text: "Garage ajouté ! ✅",
+      });
+    } else if (input.toLowerCase().includes("rendez-vous")) {
+      simulateAppointmentAdd();
+      newMessages.push({
+        role: "bot",
+        text: "Rendez-vous ajouté ! 📅✅",
       });
     } else {
-      newMessages.push({
-        role: "bot",
-        text: ai.content
-      });
+      const ai = simulateAIResponse(input);
+  
+      if (ai.type === "multi" && ai.options) {
+        newMessages.push({
+          role: "bot",
+          text:
+            ai.content +
+            "\n" +
+            ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n"),
+        });
+      } else {
+        newMessages.push({
+          role: "bot",
+          text: ai.content,
+        });
+      }
     }
   
     setMessages(newMessages);
     setInput("");
   };
   
-
+  
   return (
     <main className="h-screen w-full bg-base-200 p-2 flex justify-center items-center">
       <div className="w-full h-full bg-base-100 rounded-box shadow p-4 flex flex-col p-2">

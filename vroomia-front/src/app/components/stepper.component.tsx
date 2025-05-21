@@ -1,24 +1,14 @@
 "use client";
 import React, { useState } from "react";
-import operations from "../data/operationsData";
-import vehicleData from "../data/vehiclesData";
-import garageInfo from "../data/garageData";
-import appointments from "../data/appointmentsData";
+import { useSelector } from "react-redux";
 import {
   IdentificationIcon,
   WrenchScrewdriverIcon,
   ShoppingBagIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-
-type Operation = {
-  icon: React.FC<React.SVGProps<SVGSVGElement>>;
-  title: string;
-  subtitle: string;
-  description: string;
-  status: boolean;
-  price: number;
-};
+import { Operation } from "../store/slices/operationsSlice";
+import { RootState } from "../store/store";
 
 const StepperComponent = () => {
   const CheckIcon = () => (
@@ -37,6 +27,12 @@ const StepperComponent = () => {
       />
     </svg>
   );
+
+  //redux
+  const vehicle = useSelector((state: RootState) => state.vehicules);
+  const garage = useSelector((state: RootState) => state.garage);
+  const appointment = useSelector((state: RootState) => state.appointment);
+  const operations = useSelector((state: RootState) => state.operations);
 
   // État modal
   const [selectedOp, setSelectedOp] = useState<Operation | null>(null);
@@ -77,7 +73,7 @@ const StepperComponent = () => {
               <p className="pl-2 mt-auto mb-auto">IDENTIFICATION DU VÉHICULE</p>
             </div>
             <div className="collapse-content text-sm space-y-1">
-              {vehicleData.map((item, index) => (
+              {vehicle.map((item, index) => (
                 <div key={index} className="space-y-1">
                   <div className="flex gap-2">
                     <p className="font-medium w-40">Immatriculation</p>
@@ -138,7 +134,7 @@ const StepperComponent = () => {
               </p>
             </div>
             <div className="collapse-content text-sm space-y-1">
-              {garageInfo.map((item, index) => (
+              {garage.map((item, index) => (
                 <div key={index} className="flex gap-2 items-start mb-1">
                   <p className="w-40 font-medium">{item.label}</p>
                   <span>:</span>
@@ -180,7 +176,6 @@ const StepperComponent = () => {
               <div className="max-h-96 overflow-y-auto">
                 <ul className="list bg-base-100 rounded-box shadow-md">
                   {ops.map((op, index) => {
-                    const Icon = op.icon;
                     return (
                       <li
                         key={index}
@@ -192,7 +187,6 @@ const StepperComponent = () => {
                       }`}
                         onClick={() => setSelectedOp(op)}
                       >
-                        <Icon className="w-6 h-8 text-primary" />
                         <div>
                           <div className="font-medium">{op.title}</div>
                           <div className="text-xs uppercase font-semibold opacity-60">
@@ -223,9 +217,8 @@ const StepperComponent = () => {
                   </span>
                   <div className="flex justify-between">
                     <h2 className="text-3xl font-bold">Premium</h2>
-                    <span className="text-xl">{appointments[0].price}$</span>
                   </div>
-                  {appointments.map((appointment, index) => (
+                  {appointment.map((appointment, index) => (
                     <ul key={index} className="space-y-2 mt-4">
                       <li className="flex items-center">
                         <CheckIcon />
@@ -255,9 +248,14 @@ const StepperComponent = () => {
                           })}
                         </span>
                       </li>
+
                       <li className="flex items-center">
                         <CheckIcon />
                         <span>Commentaires : {appointment.comments}</span>
+                      </li>
+                      <li className="flex items-center">
+                        <CheckIcon />
+                        <span className="font-bold">Prix : {appointment.price}$</span>
                       </li>
                     </ul>
                   ))}
@@ -306,7 +304,6 @@ const StepperComponent = () => {
           {selectedOp && (
             <>
               <h3 className="text-lg font-bold flex items-center gap-2 mb-4">
-                <selectedOp.icon className="w-6 h-6 text-primary" />
                 {selectedOp.title}
               </h3>
               <p className="uppercase font-semibold text-xs opacity-60 mb-2">
