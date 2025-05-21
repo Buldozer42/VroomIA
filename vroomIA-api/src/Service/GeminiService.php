@@ -94,24 +94,37 @@ class GeminiService
      *
      * @param object $entity The entity to create the schema for.
      * @return array The response schema.
-     */
-    public function createResponseSchemaForGivenEntity(object $entity): array
+     */    public function createResponseSchemaForGivenEntity(object $entity): array
     {
         $className = get_class($entity);
-
         $metadata = $this->entityManager->getClassMetadata($className);
+        $reflectionClass = new \ReflectionClass($className);
 
         $properties = [];
         $propertyOrdering = [];
 
         foreach ($metadata->getFieldNames() as $fieldName) {
-            if ($fieldName === 'id' || $fieldName === 'password') {
+            if ($fieldName === 'id' || $fieldName === 'password' || $fieldName === 'roles') {
                 continue;
             }
             $type = $metadata->getTypeOfField($fieldName);
             $mappedType = $this->mapDoctrineTypeToSchemaType($type);
 
             $properties[$fieldName] = ['type' => $mappedType];
+            
+            // Vérifier les contraintes Assert\Choice pour ajouter des enum si nécessaire
+            if ($reflectionClass->hasProperty($fieldName)) {
+                $property = $reflectionClass->getProperty($fieldName);
+                $attributes = $property->getAttributes(\Symfony\Component\Validator\Constraints\Choice::class, \ReflectionAttribute::IS_INSTANCEOF);
+                
+                if (!empty($attributes)) {
+                    $attribute = $attributes[0]->newInstance();
+                    if (isset($attribute->choices) && !empty($attribute->choices)) {
+                        $properties[$fieldName]['enum'] = $attribute->choices;
+                    }
+                }
+            }
+            
             $propertyOrdering[] = $fieldName;
         }
 
