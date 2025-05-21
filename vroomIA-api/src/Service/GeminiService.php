@@ -3,8 +3,6 @@
 namespace App\Service;
 
 use App\Entity\Conversation;
-use App\Entity\Message;
-use App\Entity\Role;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -18,93 +16,76 @@ class GeminiService
     private EntityManagerInterface $entityManager;
     private HttpClientInterface $client;
     private string $apiKey;
-    private Conversation $conv;
+    private string $url;
 
     public function __construct(HttpClientInterface $client, string $googleGeminiApiKey, EntityManagerInterface $entityManager)
     {
         $this->entityManager = $entityManager;
         $this->client = $client;
         $this->apiKey = $googleGeminiApiKey;
-        $this->conv = new Conversation();
+        $this->url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$this->apiKey";
     }
 
     /**
-     * Generates responsce using the Gemini API from a given prompt.
+     * Generates a response using the Gemini API from a given prompt.
      *
      * @param string $prompt The prompt to generate text from.
      * @return string|null The generated text or null if an error occurs.
      */
     public function generateText(string $prompt): ?string
     {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $this->apiKey;
-        $this->conv->addMessage(new Message(Role::USER, $prompt));
-        $response = $this->client->request('POST', $url, [
+        $response = $this->client->request('POST', $this->url, [
             'json' => [
                 'contents' => [
-                    $this->conv->conversationToPayload()
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
                 ]
             ]
         ]);
 
-
-
         $data = $response->toArray(false);
-        $message = $data['candidates'][0]['content']['parts'][0]['text'];
-        dump($message);
-        $this->conv->addMessage(new Message(Role::MODEL, $message));
-        return $message ?? null;
-    }
 
-    public function getConversation() {
-        return $this->conv;
+        return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
 
     /**
-     * Generates a response using the Gemini API from a given context (like a conversation).
+     * Generates a response using the Gemini API folwing a given Conversation.
      *
-     * @param array $context The context to generate text from.
+     * @param Conversation $conversation The conversation to generate text from.
      * @return string|null The generated text or null if an error occurs.
      */
-    public function generateWithContext($context): ?string
+    public function generateWithConversation(Conversation $conversation): ?string
     {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $this->apiKey;
-
-        $response = $this->client->request('POST', $url, [
-            'json' => $context
+        $response = $this->client->request('POST', $this->url, [
+            'json' => [
+                'contents' => $conversation->conversationToPayload(),
+            ]
         ]);
 
         $data = $response->toArray(false);
-    }
-
-    public function getConversation() {
-        return $this->conv;
+        return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
 
     /**
-     * Generates a response using the Gemini API from a given context and generation configuration.
+     * Generates a response using the Gemini API with a given Conversation and generation configuration.
      *
-     * @param array $context The context to generate text from.
+     * @param Conversation $conversation The conversation to generate text from.
      * @param array $generationConfig The generation configuration.
      * @return string|null The generated text or null if an error occurs.
      */
-    public function generateWithContextAndGenerationConfig($context, $generationConfig): ?string
+    public function generateWithConversationAndGenerationConfig(Conversation $conversation, array $generationConfig)
     {
-        $url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' . $this->apiKey;
-
-        $response = $this->client->request('POST', $url, [
+        $response = $this->client->request('POST', $this->url, [
             'json' => [
-                'contents' => $context,
+                'contents' => $conversation->conversationToPayload(),
                 'generationConfig' => $generationConfig
             ]
         ]);
 
         $data = $response->toArray(false);
-        $message = $data['candidates'][0]['content']['parts'][0]['text'];
-        dump($message);
-        $this->conv->addMessage(new Message(Role::MODEL, $message));
-        return $message ?? null;
-    }
-
         return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
     
