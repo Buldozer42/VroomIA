@@ -23,8 +23,7 @@ class GeminiController extends AbstractController
         $this->geminiService = $geminiService;
         $this->jsonSerializerService = $jsonSerializerService;
     }
-    
-    #[Route('/gemini/test/create-person', name: 'gemini_test_create-person', methods: ['POST'])]
+      #[Route('/gemini/test/create-person', name: 'gemini_test_create-person', methods: ['POST'])]
     public function createPerson(): JsonResponse
     {
         $conversation = new Conversation();
@@ -34,7 +33,7 @@ class GeminiController extends AbstractController
         ));
         $conversation->addMessage(new Message(
             Role::USER,
-            "A partir des messages précédents, génère un objet JSON représentant une personne (Person) selon le schéma attendu. Si certaines informations sont manquantes, laisse les champs correspondants vides (ex. : '', null ou [], selon le contexte). Respecte la structure exacte attendue du JSON."
+            "A partir des messages précédents, génère un objet JSON représentant une personne (Person) selon le schéma attendu. Si certaines informations sont manquantes, laisse les champs correspondants vides (ex. : '', null ou [], selon le contexte). Respecte la structure exacte attendue du JSON. IMPORTANT: le champ 'title' doit obligatoirement être l'une de ces valeurs exactes: 'Mr', 'Mme' ou 'Companie'."
         ));
 
         try {
@@ -62,9 +61,7 @@ class GeminiController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }        
-    }
-
-    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
+    }    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
     public function updatePerson(Person $person): JsonResponse
     {
         if (!$person) {
@@ -80,7 +77,7 @@ class GeminiController extends AbstractController
         ));
         $conversation->addMessage(new Message(
             Role::USER,
-            "A partir des messages précédents, génère un objet JSON représentant une personne (Person) selon le schéma attendu. Si certaines informations sont manquantes, laisse les champs correspondants vides (ex. : '', null ou [], selon le contexte). Respecte la structure exacte attendue du JSON."
+            "A partir des messages précédents, génère un objet JSON représentant une personne (Person) selon le schéma attendu. Si certaines informations sont manquantes, laisse les champs correspondants vides (ex. : '', null ou [], selon le contexte). Respecte la structure exacte attendue du JSON. IMPORTANT: le champ 'title' doit obligatoirement être l'une de ces valeurs exactes: 'Mr', 'Mme' ou 'Companie'."
         ));
 
         try {
