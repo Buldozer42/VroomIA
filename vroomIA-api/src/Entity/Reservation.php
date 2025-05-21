@@ -4,6 +4,8 @@ namespace App\Entity;
 
 use ApiPlatform\Metadata\ApiResource;
 use App\Repository\ReservationRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -15,9 +17,6 @@ class Reservation
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
-
-    #[ORM\Column(type: Types::ARRAY)]
-    private array $operation = [];
 
     #[ORM\Column(length: 255)]
     private ?string $description = null;
@@ -40,21 +39,20 @@ class Reservation
     #[ORM\ManyToOne(inversedBy: 'reservations')]
     private ?Garage $garage = null;
 
+    /**
+     * @var Collection<int, Operation>
+     */
+    #[ORM\ManyToMany(targetEntity: Operation::class, inversedBy: 'reservations')]
+    private Collection $operations;
+
+    public function __construct()
+    {
+        $this->operations = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
-    }
-
-    public function getOperation(): array
-    {
-        return $this->operation;
-    }
-
-    public function setOperation(array $operation): static
-    {
-        $this->operation = $operation;
-
-        return $this;
     }
 
     public function getDescription(): ?string
@@ -137,6 +135,30 @@ class Reservation
     public function setGarage(?Garage $garage): static
     {
         $this->garage = $garage;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Operation>
+     */
+    public function getOperations(): Collection
+    {
+        return $this->operations;
+    }
+
+    public function addOperation(Operation $operation): static
+    {
+        if (!$this->operations->contains($operation)) {
+            $this->operations->add($operation);
+        }
+
+        return $this;
+    }
+
+    public function removeOperation(Operation $operation): static
+    {
+        $this->operations->removeElement($operation);
 
         return $this;
     }
