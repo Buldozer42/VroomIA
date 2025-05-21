@@ -268,14 +268,12 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
         $this->favoriteGarage->removeElement($favoriteGarage);
 
         return $this;
-    }
-
-    public function getAdress(): ?Adress
+    }    public function getAdress(): ?Adress
     {
         return $this->adress;
     }
 
-    public function setAdress(Adress $adress): static
+    public function setAdress(?Adress $adress): static
     {
         $this->adress = $adress;
 
