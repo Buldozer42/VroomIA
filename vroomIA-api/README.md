@@ -36,14 +36,20 @@ DATABASE_URL="mysql://<user>:<password>@127.0.0.1:3306/vroomia?serverVersion=8&c
 GEMINI_API_KEY="<your_gemini_api_key>"
 ```
 
-1. Créer la base de données :
+4. Créer la base de données :
 ```bash
 php bin/console doctrine:database:create
 ```
 
-1. Exécuter les migrations :
+5. Exécuter les migrations :
 ```bash
 php bin/console doctrine:migrations:migrate
+```
+6. Créer les clées privée et publique :
+```bash
+mkdir -p config/jwt
+openssl genrsa -out config/jwt/private.pem 4096
+openssl rsa -pubout -in config/jwt/private.pem -out config/jwt/public.pem
 ```
 
 ## Architecture du projet
