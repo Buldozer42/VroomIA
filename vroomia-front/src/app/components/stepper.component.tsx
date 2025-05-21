@@ -7,7 +7,6 @@ import {
   ShoppingBagIcon,
   CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
-import { Operation } from "../store/slices/operationsSlice";
 import { RootState } from "../store/store";
 
 const StepperComponent = () => {
