@@ -105,7 +105,7 @@ class GeminiService
         $propertyOrdering = [];
 
         foreach ($metadata->getFieldNames() as $fieldName) {
-            if ($fieldName === 'id' || $fieldName === 'password') {
+            if ($fieldName === 'id' || $fieldName === 'password' || $fieldName === 'roles') {
                 continue;
             }
             $type = $metadata->getTypeOfField($fieldName);

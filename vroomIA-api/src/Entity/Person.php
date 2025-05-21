@@ -57,10 +57,8 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
      * @var Collection<int, Garage>
      */
     #[ORM\ManyToMany(targetEntity: Garage::class, inversedBy: 'people')]
-    private Collection $favoriteGarage;
-
-    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
-    #[ORM\JoinColumn(nullable: false)]
+    private Collection $favoriteGarage;    #[ORM\OneToOne(cascade: ['persist', 'remove'])]
+    #[ORM\JoinColumn(nullable: true)]
     private ?Adress $adress = null;
 
     /**
@@ -266,14 +264,12 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
         $this->favoriteGarage->removeElement($favoriteGarage);
 
         return $this;
-    }
-
-    public function getAdress(): ?Adress
+    }    public function getAdress(): ?Adress
     {
         return $this->adress;
     }
 
-    public function setAdress(Adress $adress): static
+    public function setAdress(?Adress $adress): static
     {
         $this->adress = $adress;
 
