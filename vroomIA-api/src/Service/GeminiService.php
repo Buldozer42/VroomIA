@@ -26,6 +26,23 @@ class GeminiService
         $this->url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$this->apiKey";
     }
 
+    public function initPrompt(): ?string
+    {
+        $response = $this->client->request('POST', $this->url, [
+            'json' => [
+                'contents' => [
+                    [
+                        'parts' => getInitPayload()
+                    ]
+                ]
+            ]
+        ]);
+
+        $data = $response->toArray(false);
+
+        return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    }
+
     /**
      * Generates a response using the Gemini API from a given prompt.
      *
@@ -155,4 +172,36 @@ class GeminiService
             default => 'STRING',
         };
     }
+}
+
+function getInitPayload() {
+    $filePath = "config/prompt.txt";
+    $textContent = "";
+    $csvFilesPaths = ["src/DataFixtures/car-operations.csv", "src/DataFixtures/concessions.csv"];
+
+    if (file_exists($filePath)) {
+        $textContent = file_get_contents($filePath);
+    } else {
+        echo "File not found.";
+    }
+
+    $parts = [['text' => $textContent]];
+
+            foreach ($csvFilesPaths as $filePath) {
+        if (file_exists($filePath) && is_readable($filePath)) {
+            $fileContent = file_get_contents($filePath);
+            $mimeType ='text/csv';
+
+            $parts[] = [
+                'fileData' => [
+                    'mimeType' => $mimeType,
+                    'data' => base64_encode($fileContent),
+                ],
+            ];
+        } else {
+            // Log or handle the error for non-existent/unreadable files
+            error_log("CSV file not found or not readable: " . $filePath);
+        }
+    }
+    return $parts;
 }
