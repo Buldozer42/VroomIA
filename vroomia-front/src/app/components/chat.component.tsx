@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from "react-redux";
 import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
-
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
 import { addVehicle } from "../store/slices/vehiclesSlice";
