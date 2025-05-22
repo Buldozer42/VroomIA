@@ -18,7 +18,7 @@ const ChatComponent = () => {
     []
   );
   const [input, setInput] = useState("");
-
+  const hasFetchedRef = useRef(false);
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
@@ -28,7 +28,7 @@ const ChatComponent = () => {
     {
       target: ".chat-screen",
       content:
-        "Bienvenue sur VroomIA, votre assistant intelligent de gestion automobile.",
+        "Bienvenue sur VroomIA, votre assistant intelligent de prise de rendez-vous pour votre véhicule automobile.",
     },
     {
       target: ".chat-message",
@@ -131,8 +131,12 @@ const ChatComponent = () => {
   };
 
   const [conversationId, setConversationId] = useState("");
+
   useEffect(() => {
     const fetchConversation = async () => {
+      if (hasFetchedRef.current) return;
+
+      hasFetchedRef.current = true;
       try {
         const response = await fetch("http://localhost:8000/api/gemini/conversation/new", {
           method: "POST",
@@ -273,6 +277,7 @@ const ChatComponent = () => {
 
   // ===➡️ Clics sur les cartes : dispatch vers Redux
   const handleCardClick = (tab: DrawerType) => {
+    console.log(tab)
     if (drawerOpen && selectedTab === tab) {
       dispatch(closeDrawer());
       setTimeout(() => {
