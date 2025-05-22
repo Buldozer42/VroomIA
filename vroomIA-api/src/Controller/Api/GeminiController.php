@@ -7,6 +7,7 @@ use App\Entity\Person;
 use App\Entity\Message;
 use App\Entity\Role;
 use App\Repository\ConversationRepository;
+use App\Repository\PersonRepository;
 use App\Service\GeminiService;
 use App\Service\JsonSerializerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,10 +30,14 @@ class GeminiController extends AbstractController
         $this->geminiService = $geminiService;
         $this->jsonSerializerService = $jsonSerializerService;
     }
-      
-    #[Route('/gemini/conversation/new/{person}', name: 'gemini_conversation', methods: ['GET'])]
-    public function newConversation(Person $person): JsonResponse
+
+    #[Route('/gemini/conversation/new', name: 'gemini_conversation_new', methods: ['POST'])]
+    public function newConversation(Request $request, PersonRepository $personRepository): JsonResponse
     {
+        $data = json_decode($request->getContent(), true);
+        $personId = $data['personId'] ?? null;
+
+        $person = $personRepository->find($personId);
         if (!$person) {
             return $this->json(['error' => 'Person not found'], 404);
         }
@@ -47,15 +52,19 @@ class GeminiController extends AbstractController
         ]);
     }
 
-     #[Route('/gemini/message/send', name: 'gemini_message_send', methods: ['POST'])]
+    #[Route('/gemini/message/send', name: 'gemini_message_send', methods: ['POST'])]
     public function sendMessage(Request $request, ConversationRepository $conversationRepository): JsonResponse        
     {
-        $conversationId = $request->get('conversationId');
-        $messageContent = $request->get('message');
+        $data = json_decode($request->getContent(), true);
+        $conversationId = $data['conversationId'] ?? null;
+        $messageContent = $data['messageContent'] ?? null;
+        if (!$conversationId || !$messageContent) {
+            return $this->json(['error' => 'Conversation ID and message content are required'], 400);
+        }
 
         $conversation = $conversationRepository->find($conversationId);
         if (!$conversation) {
-            return $this->json(['error' => 'Conversation not found'], 404);
+            return $this->json(['error' => "Conversation not found id : $conversationId"], 404);
         }
 
         $newMessage = new Message(
@@ -73,17 +82,17 @@ class GeminiController extends AbstractController
                 return $this->json(['error' => 'Échec de génération du texte.'], 500);
             }
 
-            $decodedResult = json_decode($result, true);
             $geminiMessage = new Message(
                 Role::MODEL,
-                $decodedResult[0]['content']['parts'][0]['text']
+                $result
             );
+
             $conversation->addMessage($geminiMessage);
             $this->entityManager->persist($geminiMessage);
             $this->entityManager->flush();
 
             return $this->json([
-                'geminiMessage' => $geminiMessage,
+                'geminiResponse' => $result,
             ]);
 
         } catch (\Exception $e) {

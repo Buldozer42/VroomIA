@@ -1,14 +1,9 @@
 nelmio_cors:
     defaults:
+        allow_origin: ['http://localhost:3000']
+        allow_headers: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']
         allow_credentials: true
-        allow_origin: ['http://localhost:3000'] # Ton frontend
-        allow_headers: ['Content-Type', 'Authorization']
-        allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
         max_age: 3600
     paths:
-        '^/api/':
-            origin_regex: false
-            allow_origin: ['http://localhost:3000']
-            allow_headers: ['Content-Type', 'Authorization']
-            allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
-            max_age: 3600
+        '^/api/': ~
