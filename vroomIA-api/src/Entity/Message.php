@@ -16,7 +16,7 @@ class Message
     #[ORM\Column(length: 255)]
     private ?Role $owner = null;
 
-    #[ORM\Column(length: 255)]
+    #[ORM\Column(length: 10000)]
     private ?string $content = null;
 
     #[ORM\ManyToOne(inversedBy: 'messages')]
