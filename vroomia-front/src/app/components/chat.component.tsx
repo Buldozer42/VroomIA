@@ -6,38 +6,6 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
-
-const simulateAIResponse = (input: string) => {
-  const lower = input.toLowerCase();
-  if (lower.includes("frein") || lower.includes("bruit")) {
-    return {
-      type: "multi",
-      content:
-        "Plusieurs causes possibles, sélectionne ce qui semble pertinent :",
-      options: [
-        "Disques de frein usés",
-        "Plaquettes à changer",
-        "Liquide de frein bas",
-        "Autre chose",
-      ],
-    };
-  }
-
-  if (
-    lower.includes("je dois faire la vidange") ||
-    lower.includes("révision")
-  ) {
-    return {
-      type: "binaire",
-      content: "Souhaitez-vous planifier une vidange maintenant ?",
-    };
-  }
-
-  return {
-    type: "texte",
-    content: `Tu as dit : "${input}"`,
-  };
-};
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
 import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
@@ -173,7 +141,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 2 }),
+          body: JSON.stringify({ personId: 14}),
         });
 
         const data = await response.json();
