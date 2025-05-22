@@ -13,7 +13,6 @@ use App\Service\JsonSerializerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -23,9 +22,6 @@ class GeminiController extends AbstractController
     private $geminiService;
     private $jsonSerializerService;
 
-    private $entityManager;
-
-    public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager)
     private $entityManager;
 
     public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager)

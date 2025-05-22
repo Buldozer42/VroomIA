@@ -1,8 +1,9 @@
 "use client";
-import React, { use } from "react";
-import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
+import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
 
@@ -37,8 +38,117 @@ const simulateAIResponse = (input: string) => {
     content: `Tu as dit : "${input}"`,
   };
 };
+import { addVehicle } from "../store/slices/vehiclesSlice";
+import { addOperation } from "../store/slices/operationsSlice";
+import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
+import { RootState } from "../store/store";
 
 const ChatComponent = () => {
+  const dispatch = useDispatch();
+
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>(
+    []
+  );
+  const [input, setInput] = useState("");
+
+  const [run, setRun] = useState(false);
+  const [stepIndex, setStepIndex] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { drawerOpen, selectedTab } = useSelector((state: RootState) => state.ui);
+
+  const steps: Step[] = [
+    {
+      target: ".chat-screen",
+      content:
+        "Bienvenue sur VroomIA, votre assistant intelligent de gestion automobile.",
+    },
+    {
+      target: ".chat-message",
+      content:
+        "Interagissez avec VroomIA afin d’identifier précisément les besoins de votre véhicule et d’optimiser la gestion de votre prise de rendez-vous.",
+    },
+  ];
+
+  useEffect(() => {
+    setRun(true);
+  }, []);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleJoyrideCallback = (data: CallBackProps) => {
+    const { status, index, type } = data;
+
+    if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
+      setRun(false);
+      setStepIndex(0);
+    } else if (type === "step:after" || type === "error:target_not_found") {
+      setStepIndex(index + 1);
+    }
+  };
+
+  const simulateSingleOperationAdd = (title: string) => {
+    const operations = [
+      {
+        title: "Vidange",
+        subtitle: "Entretien périodique",
+        description:
+          "La vidange moteur permet de prolonger la durée de vie du véhicule et d’assurer son bon fonctionnement.",
+        status: true,
+        price: 33,
+      },
+      {
+        title: "Contrôle technique",
+        subtitle: "Obligation légale",
+        description:
+          "Le contrôle technique vérifie les points de sécurité et les normes environnementales du véhicule.",
+        status: false,
+        price: 121,
+      },
+      {
+        title: "Révision",
+        subtitle: "Maintenance constructeur",
+        description:
+          "Une révision complète selon les recommandations constructeur pour éviter les pannes futures.",
+        status: false,
+        price: 69,
+      },
+      {
+        title: "Carrosserie",
+        subtitle: "Réparations esthétiques",
+        description:
+          "Réparation ou remplacement d’éléments abîmés ou rayés sur votre carrosserie.",
+        status: false,
+        price: 400,
+      },
+      {
+        title: "Diagnostic moteur",
+        subtitle: "Recherche de panne",
+        description:
+          "Analyse électronique complète du moteur pour détecter les anomalies ou messages d’erreur.",
+        status: false,
+        price: 129,
+      },
+    ];
+
+    const found = operations.find(
+      (op) => op.title.toLowerCase() === title.toLowerCase()
+    );
+
+    if (found) {
+      dispatch(addOperation(found));
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: `Opération « ${found.title} » ajoutée ! ✅` },
+      ]);
+    } else {
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: `Aucune opération trouvée pour « ${title} ». ❌` },
+      ]);
+    }
+  };
 
   const simulateAppointmentAdd = () => {
     dispatch(
@@ -63,7 +173,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 26 }),
+          body: JSON.stringify({ personId: 2 }),
         });
 
         const data = await response.json();
@@ -81,13 +191,9 @@ const ChatComponent = () => {
     fetchConversation();
   }, []);
 
-  const dispatch = useDispatch();
   const simulateGarageAdd = () => {
     dispatch(
-      addGarageEntry({
-        label: "Nom du garage",
-        value: "Garage du Centre",
-      })
+      addGarageEntry({ label: "Nom du garage", value: "Garage du Centre" })
     );
     dispatch(
       addGarageEntry({
@@ -103,14 +209,23 @@ const ChatComponent = () => {
     );
   };
 
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>(
-    []
-  );
-  const [input, setInput] = useState("");
+  const simulateVehicleAdd = () => {
+    dispatch(
+      addVehicle({
+        immatriculation: "AB-123-CD",
+        marque: "Peugeot",
+        model: "208",
+        year: 2022,
+        vin: "VF3XXXXXXXXXXXXXX",
+        mileage: 15000,
+        lastTechnicalInspectionDate: new Date("2024-05-10"),
+      })
+    );
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
-  
+
     const newMessages = [...messages, { role: "user", text: input }];
     setMessages(newMessages);
     setInput("");
@@ -137,9 +252,22 @@ const ChatComponent = () => {
     }
   
     // 🔁 Logique locale (simulations)
+
     const lowerInput = input.toLowerCase();
-  
-    if (lowerInput.includes("garage")) {
+    const keywords = [
+      "vidange",
+      "contrôle technique",
+      "révision",
+      "carrosserie",
+      "diagnostic moteur",
+    ];
+
+    const matched = keywords.find((word) => lowerInput.includes(word));
+
+    if (matched) {
+      simulateSingleOperationAdd(matched);
+      return;
+    } else if (lowerInput.includes("garage")) {
       simulateGarageAdd();
       setMessages((prev) => [
         ...prev,
@@ -151,76 +279,138 @@ const ChatComponent = () => {
         ...prev,
         { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
       ]);
-    } else {
-      const ai = simulateAIResponse(input);
-  
+    } else if (lowerInput.includes("véhicule")) {
+      simulateVehicleAdd();
       setMessages((prev) => [
         ...prev,
-        {
-          role: "bot",
-          text:
-            ai.type === "multi" && ai.options
-              ? ai.content +
-                "\n" +
-                ai.options.map((opt, i) => `${i + 1}. ${opt}`).join("\n")
-              : ai.content,
-        },
+        { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
       ]);
     }
   };
-  
-  
-  return (
-    <main className="h-screen w-full bg-base-200 p-2 flex justify-center items-center">
-      <div className="w-full h-full bg-base-100 rounded-box shadow p-4 flex flex-col p-2">
-        {/* Titre */}
-        <h1 className="text-2xl font-bold text-left mb-4 font-racing">
-          VroomIA
-        </h1>
 
-        {/* Zone des messages */}
-        <div className="flex-1 overflow-y-auto space-y-2">
-          {messages.map((msg, idx) => (
-            <div
-              key={idx}
-              className={`flex ${
-                msg.role === "user" ? "justify-end" : "justify-start"
-              }`}
-            >
+  // ===➡️ Clics sur les cartes : dispatch vers Redux
+  const handleCardClick = (tab: DrawerType) => {
+    if (drawerOpen && selectedTab === tab) {
+      dispatch(closeDrawer());
+      setTimeout(() => {
+        dispatch(openDrawer(tab));
+      }, 100);
+    } else {
+      dispatch(openDrawer(tab));
+    }
+  };
+
+  return (
+    <>
+      <Joyride
+        steps={steps}
+        run={run}
+        stepIndex={stepIndex}
+        continuous
+        showSkipButton
+        showProgress
+        callback={handleJoyrideCallback}
+        styles={{
+          options: {
+            zIndex: 10000,
+            primaryColor: "#1d4ed8",
+          },
+        }}
+      />
+
+      <main className="h-screen w-full bg-base-200 p-2 flex justify-center items-center">
+        <div className="w-full h-full bg-base-100 rounded-box shadow p-4 flex flex-col p-2">
+          <div className="flex flex-row chat-screen">
+            <h1 className="text-2xl font-bold text-left font-racing mt-auto">
+              VroomIA
+            </h1>
+            <ChatBubbleLeftRightIcon className="w-6 mt-auto mb-auto ml-2" />
+          </div>
+
+          <div className="flex-1 overflow-y-auto space-y-2 chat-messages">
+            {messages.map((msg, idx) => (
               <div
-                className={`rounded-3xl px-4 py-2 max-w-xs shadow ${
-                  msg.role === "user"
-                    ? "bg-white-500 text-black"
-                    : "bg-gray-200 text-black"
+                key={idx}
+                className={`flex ${
+                  msg.role === "user" ? "justify-end" : "justify-start"
                 }`}
               >
-                {msg.text}
+                <div
+                  className={`rounded-3xl px-4 py-2 max-w-xs shadow ${
+                    msg.role === "user"
+                      ? "bg-gray-200 text-black"
+                      : "bg-white-500 text-black"
+                  }`}
+                >
+                  {msg.text}
+                </div>
+              </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* 🟦 Cartes de navigation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 mb-2">
+            <div
+              /* todo : add action to book reservation */
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Prendre un rendez-vous</h2>
+                <p className="text-xs">Réservez une date avec votre garage.</p>
               </div>
             </div>
-          ))}
-        </div>
-        <p className="bg-gray-200 p-4 rounded-3xl text-xs text-black-200 mb-2">Veuillez-nous renseigner votre problème : bruits moteurs, voyants, quel types de prestations vous voulez : vidange, contrôle technique etc</p>
-        <div className="relative w-full">
-          <input
-            type="text"
-            className="input input-bordered w-full pr-10"
-            placeholder="Écris ton message..."
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleSend()}
-          />
+            <div
+              onClick={() => handleCardClick("profile")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Consulter mes infos</h2>
+                <p className="text-xs">
+                  Voir mon profil utilisateur et mes véhicules.
+                </p>
+              </div>
+            </div>
+            <div
+              onClick={() => handleCardClick("stack")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Voir mes rendez-vous</h2>
+                <p className="text-xs">
+                  Liste des rendez-vous passés et futurs.
+                </p>
+              </div>
+            </div>
+          </div>
 
-          <button
-            onClick={handleSend}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary"
-            disabled={!input.trim()}
-            aria-label="Envoyer le message"
-          >
-            <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
-          </button>
+          <p className="bg-gray-100 p-4 rounded-3xl text-xs text-black-200 mb-2 opacity-80">
+            Veuillez-nous renseigner votre problème : bruits moteurs, voyants,
+            quel types de prestations vous voulez : vidange, contrôle technique,
+            etc.
+          </p>
+
+          <div className="relative w-full chat-message">
+            <input
+              type="text"
+              className="input input-bordered w-full pr-10 outline-none focus:outline-none border-gray-200 chat-input"
+              placeholder="Écris ton message..."
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            />
+            <button
+              onClick={handleSend}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
+              disabled={!input.trim()}
+              aria-label="Envoyer le message"
+            >
+              <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
+            </button>
+          </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 };
 

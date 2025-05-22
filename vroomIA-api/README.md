@@ -76,7 +76,7 @@ Le projet suit l'architecture standard de Symfony avec API Platform :
 Pour lancer le serveur de développement :
 
 ```bash
-symfony server:start
+symfony server:start --no-tls
 ```
 
 ## Documentation API
