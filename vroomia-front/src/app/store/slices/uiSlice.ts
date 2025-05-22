@@ -6,7 +6,7 @@ interface UiState {
     drawerOpen: boolean;
     drawerType: DrawerType | null;
     selectedTab: DrawerType | null;
-  }
+}
 
 const initialState: UiState = {
     drawerOpen: false,
@@ -22,14 +22,15 @@ const uiSlice = createSlice({
             state.drawerOpen = true;
             state.drawerType = action.payload;
             state.selectedTab = action.payload;  // on met à jour selectedTab aussi ici
-          },
+        },
         closeDrawer: (state) => {
             state.drawerOpen = false;
             state.drawerType = null;
         },
         setTab: (state, action: PayloadAction<DrawerType>) => {
-            state.selectedTab = action.payload;
-        },
+            state.drawerOpen = true;
+            state.drawerType = action.payload;
+        }
     },
 });
 

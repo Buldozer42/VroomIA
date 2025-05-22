@@ -6,38 +6,6 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
-
-const simulateAIResponse = (input: string) => {
-  const lower = input.toLowerCase();
-  if (lower.includes("frein") || lower.includes("bruit")) {
-    return {
-      type: "multi",
-      content:
-        "Plusieurs causes possibles, sélectionne ce qui semble pertinent :",
-      options: [
-        "Disques de frein usés",
-        "Plaquettes à changer",
-        "Liquide de frein bas",
-        "Autre chose",
-      ],
-    };
-  }
-
-  if (
-    lower.includes("je dois faire la vidange") ||
-    lower.includes("révision")
-  ) {
-    return {
-      type: "binaire",
-      content: "Souhaitez-vous planifier une vidange maintenant ?",
-    };
-  }
-
-  return {
-    type: "texte",
-    content: `Tu as dit : "${input}"`,
-  };
-};
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
 import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
@@ -173,7 +141,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 2 }),
+          body: JSON.stringify({ personId: 14}),
         });
 
         const data = await response.json();
@@ -223,70 +191,85 @@ const ChatComponent = () => {
     );
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+ const handleSend = async () => {
+  if (!input.trim()) return;
 
-    const newMessages = [...messages, { role: "user", text: input }];
-    setMessages(newMessages);
-    setInput("");
-    try {
-       const response = await fetch("http://localhost:8000/api/gemini/message/send", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: JSON.stringify({ 
-            messageContent: input,
-            conversationId: conversationId,
-          }),
-      });
-      const data = await response.json();
-      if (data.error) {
-        console.error("Erreur :", data.error);
-      } else {
-        console.log("Réponse du backend:", data.geminiResponse);
-      }
-    } catch (error) {
-      console.error("Erreur lors de l'envoi au backend:", error);
-    }
-  
-    // 🔁 Logique locale (simulations)
+  const newMessages = [...messages, { role: "user", text: input }];
+  setMessages(newMessages);
+  setInput("");
 
-    const lowerInput = input.toLowerCase();
-    const keywords = [
-      "vidange",
-      "contrôle technique",
-      "révision",
-      "carrosserie",
-      "diagnostic moteur",
-    ];
+  try {
+    const response = await fetch("http://localhost:8000/api/gemini/message/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+      },
+      body: JSON.stringify({
+        messageContent: input,
+        conversationId: conversationId,
+      }),
+    });
 
-    const matched = keywords.find((word) => lowerInput.includes(word));
+    const data = await response.json();
 
-    if (matched) {
-      simulateSingleOperationAdd(matched);
-      return;
-    } else if (lowerInput.includes("garage")) {
-      simulateGarageAdd();
+    if (data.error) {
+      console.error("Erreur :", data.error);
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: "Garage ajouté ! ✅" },
+        { role: "bot", text: "❌ Une erreur est survenue lors de la réponse du serveur." },
       ]);
-    } else if (lowerInput.includes("rendez-vous")) {
-      simulateAppointmentAdd();
+    } else {
+      console.log("Réponse du backend:", data.geminiResponse);
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
-      ]);
-    } else if (lowerInput.includes("véhicule")) {
-      simulateVehicleAdd();
-      setMessages((prev) => [
-        ...prev,
-        { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
+        { role: "bot", text: data.geminiResponse },
       ]);
     }
-  };
+  } catch (error) {
+    console.error("Erreur lors de l'envoi au backend:", error);
+    setMessages((prev) => [
+      ...prev,
+      { role: "bot", text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL." },
+    ]);
+  }
+
+  // 🔁 Logique locale (simulations)
+  const lowerInput = input.toLowerCase();
+  const keywords = [
+    "vidange",
+    "contrôle technique",
+    "révision",
+    "carrosserie",
+    "diagnostic moteur",
+  ];
+
+  const matched = keywords.find((word) => lowerInput.includes(word));
+
+  if (matched) {
+    simulateSingleOperationAdd(matched);
+    return;
+  } else if (lowerInput.includes("garage")) {
+    simulateGarageAdd();
+    setMessages((prev) => [
+      ...prev,
+      { role: "bot", text: "Garage ajouté ! ✅" },
+    ]);
+  } else if (lowerInput.includes("rendez-vous")) {
+    simulateAppointmentAdd();
+    setMessages((prev) => [
+      ...prev,
+      { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
+    ]);
+  } else if (lowerInput.includes("véhicule")) {
+    simulateVehicleAdd();
+    setMessages((prev) => [
+      ...prev,
+      { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
+    ]);
+  }
+};
+
 
   // ===➡️ Clics sur les cartes : dispatch vers Redux
   const handleCardClick = (tab: DrawerType) => {

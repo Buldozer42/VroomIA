@@ -1,7 +1,5 @@
 "use client";
-
-import React, { useEffect } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import React, { useState } from "react";
 import {
   EllipsisHorizontalCircleIcon,
   UserIcon,
@@ -15,25 +13,12 @@ import nextRdvList from "./nextAppointmentList";
 import previousRdvList from "./previousAppointmentsList";
 import userInfo from "../data/userData";
 import garageInfo from "../data/garageData";
-import { RootState } from "../store/store";
-import { setTab, openDrawer, closeDrawer } from "../store/slices/uiSlice";
 
 const Drawer = () => {
-  const dispatch = useDispatch();
-  const { drawerOpen, drawerType } = useSelector((state: RootState) => state.ui);
-
-  useEffect(() => {
-    const drawerCheckbox = document.getElementById("my-drawer") as HTMLInputElement;
-    if (drawerCheckbox) drawerCheckbox.checked = drawerOpen;
-  }, [drawerOpen]);
-
-  const handleTabChange = (tab: "profile" | "stack" | "stepper" | "logout") => {
-    dispatch(setTab(tab));
-    dispatch(openDrawer(tab));
-  };
+  const [selectedTab, setSelectedTab] = useState("profile");
 
   const renderContent = () => {
-    switch (drawerType) {
+    switch (selectedTab) {
       case "profile":
         return (
           <>
@@ -44,7 +29,8 @@ const Drawer = () => {
                 {userInfo.map((item, index) => (
                   <li key={index}>
                     <p>
-                      <span className="font-semibold">{item.label} :</span> {item.value}
+                      <span className="font-semibold">{item.label} :</span>{" "}
+                      {item.value}
                     </p>
                   </li>
                 ))}
@@ -63,9 +49,7 @@ const Drawer = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-500 underline"
-                      >
-                        {item.value}
-                      </a>
+                      ></a>
                     ) : item.label === "Horaire" ? (
                       <pre className="whitespace-pre-wrap text-sm text-gray-700 mt-1">
                         {item.value}
@@ -83,7 +67,7 @@ const Drawer = () => {
         return (
           <>
             <h2 className="text-2xl font-bold mb-4">Les rendez-vous</h2>
-            <h3 className="text-xl font-bold mb-4">Vos prochains rendez-vous</h3>
+            <h3 className="text-xl font-bold mb-4">Vos prochain rendez-vous</h3>
             <ul className="space-y-4">
               {nextRdvList.map((rdv, index) => (
                 <li key={index} className="p-4 rounded-xl bg-base-100 shadow">
@@ -99,7 +83,7 @@ const Drawer = () => {
                 </li>
               ))}
             </ul>
-            <br />
+            <br></br>
             <h3 className="text-xl font-bold mb-4">Vos rendez-vous passés</h3>
             <ul className="space-y-4">
               {previousRdvList.map((rdv, index) => (
@@ -132,6 +116,16 @@ const Drawer = () => {
     }
   };
 
+  const handleTabChange = (tab: string) => {
+    setSelectedTab(tab);
+
+    // Fermer le drawer après le clic
+    const drawerCheckbox = document.getElementById(
+      "my-drawer"
+    ) as HTMLInputElement;
+    if (drawerCheckbox) drawerCheckbox.checked = false;
+  };
+
   return (
     <div className="drawer drawer-end w-full">
       <input id="my-drawer" type="checkbox" className="drawer-toggle" />
@@ -144,51 +138,58 @@ const Drawer = () => {
       <div className="drawer-side">
         <label htmlFor="my-drawer" className="drawer-overlay"></label>
         <div className="flex h-full w-[500px] bg-base-200 text-base-content">
+          {/* Sidebar */}
           <nav className="w-15 md:w-20 bg-base-300 p-4 flex flex-col gap-4 items-center relative">
+            {/* Mobile only button */}
             <button
               onClick={() => handleTabChange("stepper")}
               className={`p-2 rounded hover:bg-base-100 lg:hidden ${
-                drawerType === "stepper" ? "bg-base-100 text-blue-500" : ""
+                selectedTab === "stepper" ? "bg-base-100 text-blue-500" : ""
               }`}
             >
               <QueueListIcon className="w-6 h-6" />
             </button>
 
             <button
-              onClick={() => handleTabChange("profile")}
+              onClick={() => setSelectedTab("profile")}
               className={`p-2 rounded hover:bg-base-100 ${
-                drawerType === "profile" ? "bg-base-100 text-blue-500" : ""
+                selectedTab === "profile" ? "bg-base-100 text-blue-500" : ""
               }`}
             >
               <UserIcon className="w-6 h-6" />
             </button>
 
             <button
-              onClick={() => handleTabChange("stack")}
+              onClick={() => setSelectedTab("stack")}
               className={`p-2 rounded hover:bg-base-100 ${
-                drawerType === "stack" ? "bg-base-100 text-blue-500" : ""
+                selectedTab === "stack" ? "bg-base-100 text-blue-500" : ""
               }`}
             >
               <RectangleStackIcon className="w-6 h-6" />
             </button>
 
+            {/* Return with close drawer */}
             <button
-              onClick={() => dispatch(closeDrawer())}
-              className="p-2 rounded hover:bg-base-100"
+              onClick={() => handleTabChange("return")}
+              className={`p-2 rounded hover:bg-base-100 ${
+                selectedTab === "return" ? "bg-base-100 text-blue-500" : ""
+              }`}
             >
               <ArrowUturnLeftIcon className="w-6 h-6" />
             </button>
 
+            {/* Logout button fixed at bottom */}
             <button
-              onClick={() => handleTabChange("logout")}
+              onClick={() => setSelectedTab("logout")}
               className={`absolute bottom-5 p-2 rounded hover:bg-base-100 ${
-                drawerType === "logout" ? "bg-base-100 text-blue-500" : ""
+                selectedTab === "logout" ? "bg-base-100 text-blue-500" : ""
               }`}
             >
               <ArrowRightOnRectangleIcon className="w-6 h-6 text-red-500" />
             </button>
           </nav>
 
+          {/* Drawer content */}
           <div className="flex-1 p-6 overflow-y-auto">{renderContent()}</div>
         </div>
       </div>
