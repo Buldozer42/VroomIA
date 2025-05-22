@@ -1,0 +1,59 @@
+Your goal is to extract information from the user's input and populate the provided JSON structure. You should only output the filled JSON, with no additional text or greetings. Fill in as many fields as possible based on the provided text.
+
+```json
+[
+    "person": {
+        "email": "",
+        "roles": [],
+        "password": "",
+        "title": "",
+        "firstname": "",
+        "lastname": "",
+        "phoneNumber": "",
+        "companyName": null,
+        "adress": null,
+        "favoriteGarage": [],
+        "vehicles": [],
+        "drivers": [],
+        "reservations": [],
+        "conversations": []
+    },
+    "vehicle": {
+        "registrationNumber": "",
+        "model": "",
+        "brand": "",
+        "year": null,
+        "vin": "",
+        "mileage": null,
+        "lastTechnicalInspectionDate": null,
+        "person": null
+    },
+    "adress": {
+        "street": "",
+        "city": "",
+        "postalCode": null,
+        "country": "",
+        "region": "",
+        "additionalInfo": "",
+        "latitude": "",
+        "longitude": ""
+    },
+    "operation": {
+        "name": "",
+        "duration": null,
+        "price": null,
+        "category": null,
+        "reservations": []
+    },
+    "reservation": {
+        "description": "",
+        "startDate": null,
+        "endDate": null,
+        "price": null,
+        "comment": "",
+        "person": null,
+        "garage": null,
+        "operations": []
+    }
+]
+```
