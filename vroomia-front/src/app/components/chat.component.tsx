@@ -6,6 +6,38 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
+
+const simulateAIResponse = (input: string) => {
+  const lower = input.toLowerCase();
+  if (lower.includes("frein") || lower.includes("bruit")) {
+    return {
+      type: "multi",
+      content:
+        "Plusieurs causes possibles, sélectionne ce qui semble pertinent :",
+      options: [
+        "Disques de frein usés",
+        "Plaquettes à changer",
+        "Liquide de frein bas",
+        "Autre chose",
+      ],
+    };
+  }
+
+  if (
+    lower.includes("je dois faire la vidange") ||
+    lower.includes("révision")
+  ) {
+    return {
+      type: "binaire",
+      content: "Souhaitez-vous planifier une vidange maintenant ?",
+    };
+  }
+
+  return {
+    type: "texte",
+    content: `Tu as dit : "${input}"`,
+  };
+};
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
 import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
@@ -146,7 +178,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 14}),
+          body: JSON.stringify({ personId: 2 }),
         });
 
         const data = await response.json();
@@ -196,10 +228,10 @@ const ChatComponent = () => {
     );
   };
 
- const handleSend = async () => {
-  if (!input.trim()) return;
+ const handleSend = async (text?: string) => {
+  const message = text ?? input
 
-  const newMessages = [...messages, { role: "user", text: input }];
+  const newMessages = [...messages, { role: "user", text: message }];
   setMessages(newMessages);
   setInput("");
 
@@ -211,7 +243,7 @@ const ChatComponent = () => {
         "Accept": "application/json",
       },
       body: JSON.stringify({
-        messageContent: input,
+        messageContent: message,
         conversationId: conversationId,
       }),
     });
@@ -245,7 +277,7 @@ const ChatComponent = () => {
   }
 
   // 🔁 Logique locale (simulations)
-  const lowerInput = input.toLowerCase();
+  const lowerInput = message.toLowerCase();
   const keywords = [
     "vidange",
     "contrôle technique",
@@ -296,44 +328,38 @@ const ChatComponent = () => {
 
   const LineButtonConfirm = () => {
     
-    // const onConfirm = async () => {
-    //   setIsConfirmStep(false);
-    //   try {
-    //     const response = await fetch("http://localhost:8000/api/gemini/message/confirm", {
-    //       method: "POST",
-    //       headers: {
-    //         "Content-Type": "application/json",
-    //         "Accept": "application/json",
-    //       },
-    //       body: JSON.stringify({
-    //         messageContent: "Oui",
-    //         conversationId: conversationId,
-    //       }),
-    //     });
+    const onConfirm = async () => {
+      setIsConfirmStep(false);
+      try {
+        const response = await fetch("http://localhost:8000/api/gemini/message/confirm", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+          },
+          body: JSON.stringify({
+            conversationId: conversationId,
+          }),
+        });
 
-    //     const data = await response.json();
+        const data = await response.json();
 
-    //     if (data.error) {
-    //       console.error("Erreur :", data.error);
-    //       setMessages((prev) => [
-    //         ...prev,
-    //         { role: "bot", text: "❌ Une erreur est survenue lors de la réponse du serveur." },
-    //       ]);
-    //     } else {
-    //       console.log("Réponse du backend:", data.geminiResponse);
-    //       setMessages((prev) => [
-    //         ...prev,
-    //         { role: "bot", text: data.geminiResponse },
-    //       ]);
-    //     }
-    //   } catch (error) {
-    //     console.log("Erreur lors de l'envoi au backend:", error);
-    //     setMessages((prev) => [
-    //       ...prev,
-    //       { role: "bot", text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL." },
-    //     ]);
-    //   }
-    // }
+        if (data.error) {
+          console.error("Erreur :", data.error);
+          setMessages((prev) => [
+            ...prev,
+            { role: "bot", text: "❌ Une erreur est survenue lors de la réponse du serveur." },
+          ]);
+        }
+        console.log(data);
+      } catch (error) {
+        console.log("Erreur lors de l'envoi au backend:", error);
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL." },
+        ]);
+      }
+    }
 
     return (
       <div style={{display: "flex", justifyContent:"flex-end", flexDirection: "row", gap: 10}}>
@@ -341,7 +367,7 @@ const ChatComponent = () => {
           rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
           space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 
           focus:ring-green-300 focus:ring-opacity-75"
-          onClick={() => { setInput("Oui"); handleSend(); }}
+          onClick={async () => {await onConfirm(); handleSend("Oui"); }}
         >
           <span>✅</span>
           <span>Oui</span>
@@ -350,7 +376,7 @@ const ChatComponent = () => {
           rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
           space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-300 
           focus:ring-opacity-75"
-          onClick={() => { setInput("Non"); handleSend(); }}
+          onClick={() => { handleSend("Non"); }}
         >
           <span>❌</span>
           <span>Non</span>
@@ -463,7 +489,7 @@ const ChatComponent = () => {
                   onKeyDown={(e) => e.key === "Enter" && handleSend()}
                 />
                 <button
-                  onClick={handleSend}
+                  onClick={() => handleSend()}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
                   disabled={!input.trim()}
                   aria-label="Envoyer le message"

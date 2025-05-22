@@ -116,6 +116,24 @@ class GeminiService
         return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
 
+    public function formatJsonData(string $aiPayload): ?string {
+        $filePath = dirname(__DIR__, 2) . "/config/jsonPrompt.txt";
+        $textContent = "";
+
+        if (file_exists($filePath)) {
+            $textContent = file_get_contents($filePath);
+        } else {
+            $textContent = "No initial prompt found.";
+        }
+        $response = $this->generateText($textContent . $aiPayload);
+
+        if (!$response) {
+            throw new \Exception("Failed to generate initial response from Gemini API.");
+        }
+        // handleJson($response);
+        return $response;
+    }
+
     /**
      * Generates a response using the Gemini API with a given Conversation and generation configuration.
      *
