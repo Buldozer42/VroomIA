@@ -23,7 +23,8 @@ const ChatComponent = () => {
   const [stepIndex, setStepIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { drawerOpen, selectedTab } = useSelector((state: RootState) => state.ui);
-
+  const [isConfirmStep, setIsConfirmStep] = useState(false);
+  
   const steps: Step[] = [
     {
       target: ".chat-screen",
@@ -229,6 +230,11 @@ const ChatComponent = () => {
         ...prev,
         { role: "bot", text: data.geminiResponse },
       ]);
+      if (data.geminiResponse.includes("Étape de confirmation")) {
+        setIsConfirmStep(true);
+      } else {
+        setIsConfirmStep(false);
+      }
     }
   } catch (error) {
     console.error("Erreur lors de l'envoi au backend:", error);
@@ -287,6 +293,72 @@ const ChatComponent = () => {
       dispatch(openDrawer(tab));
     }
   };
+
+  const LineButtonConfirm = () => {
+    
+    // const onConfirm = async () => {
+    //   setIsConfirmStep(false);
+    //   try {
+    //     const response = await fetch("http://localhost:8000/api/gemini/message/confirm", {
+    //       method: "POST",
+    //       headers: {
+    //         "Content-Type": "application/json",
+    //         "Accept": "application/json",
+    //       },
+    //       body: JSON.stringify({
+    //         messageContent: "Oui",
+    //         conversationId: conversationId,
+    //       }),
+    //     });
+
+    //     const data = await response.json();
+
+    //     if (data.error) {
+    //       console.error("Erreur :", data.error);
+    //       setMessages((prev) => [
+    //         ...prev,
+    //         { role: "bot", text: "❌ Une erreur est survenue lors de la réponse du serveur." },
+    //       ]);
+    //     } else {
+    //       console.log("Réponse du backend:", data.geminiResponse);
+    //       setMessages((prev) => [
+    //         ...prev,
+    //         { role: "bot", text: data.geminiResponse },
+    //       ]);
+    //     }
+    //   } catch (error) {
+    //     console.log("Erreur lors de l'envoi au backend:", error);
+    //     setMessages((prev) => [
+    //       ...prev,
+    //       { role: "bot", text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL." },
+    //     ]);
+    //   }
+    // }
+
+    return (
+      <div style={{display: "flex", justifyContent:"flex-end", flexDirection: "row", gap: 10}}>
+        <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6
+          rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
+          space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 
+          focus:ring-green-300 focus:ring-opacity-75"
+          onClick={() => { setInput("Oui"); handleSend(); }}
+        >
+          <span>✅</span>
+          <span>Oui</span>
+        </button>
+        <button className="bg-red-500 hover:bg-red-600  text-white font-bold py-3 px-6 
+          rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
+          space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-300 
+          focus:ring-opacity-75"
+          onClick={() => { setInput("Non"); handleSend(); }}
+        >
+          <span>❌</span>
+          <span>Non</span>
+        </button>
+      </div>
+    )
+  }
+
 
   return (
     <>
@@ -378,28 +450,33 @@ const ChatComponent = () => {
             etc.
           </p>
 
-          <div className="relative w-full chat-message">
-            <input
-              type="text"
-              className="input input-bordered w-full pr-10 outline-none focus:outline-none border-gray-200 chat-input"
-              placeholder="Écris ton message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button
-              onClick={handleSend}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
-              disabled={!input.trim()}
-              aria-label="Envoyer le message"
-            >
-              <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
-            </button>
-          </div>
+            {isConfirmStep ? 
+              <LineButtonConfirm/>
+            :  
+              <div className="relative w-full chat-message">
+                <input
+                  type="text"
+                  className="input input-bordered w-full pr-10 outline-none focus:outline-none border-gray-200 chat-input"
+                  placeholder="Écris ton message..."
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                />
+                <button
+                  onClick={handleSend}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
+                  disabled={!input.trim()}
+                  aria-label="Envoyer le message"
+                >
+                  <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
+                </button>
+              </div>
+            }
         </div>
       </main>
     </>
   );
 };
+
 
 export default ChatComponent;
