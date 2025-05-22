@@ -10,6 +10,7 @@ import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
 import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
 import { RootState } from "../store/store";
+import ReactMarkdown from "react-markdown";
 
 const ChatComponent = () => {
   const dispatch = useDispatch();
@@ -37,6 +38,20 @@ const ChatComponent = () => {
         "Interagissez avec VroomIA afin d’identifier précisément les besoins de votre véhicule et d’optimiser la gestion de votre prise de rendez-vous.",
     },
   ];
+
+  function formatGeminiMessage(text : string) {
+    // 1. Remplacer `:*` et `***` par `**` (gras) correct
+    text = text.replace(/\:\*\*\*/g, "**");
+    text = text.replace(/\*\*\*/g, "**");
+  
+    // 2. Ajouter un saut de ligne après chaque bullet point
+    text = text.replace(/ \* /g, "\n* ");
+  
+    // 3. Ajouter des sauts de ligne entre les phrases finissant par un point et un espace, pour aérer
+    text = text.replace(/\. /g, ".\n\n");
+  
+    return text.trim();
+  }
 
   useEffect(() => {
     setRun(true);
@@ -100,6 +115,8 @@ const ChatComponent = () => {
         price: 129,
       },
     ];
+
+
 
     const found = operations.find(
       (op) => op.title.toLowerCase() === title.toLowerCase()
@@ -402,7 +419,7 @@ const ChatComponent = () => {
                       : "bg-white-500 text-black"
                   }`}
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
               </div>
             ))}
