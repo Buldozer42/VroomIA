@@ -3,6 +3,9 @@
 namespace App\Service;
 
 use App\Entity\Conversation;
+use App\Entity\Message;
+use App\Entity\Role;
+use App\Entity\Person;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -24,6 +27,50 @@ class GeminiService
         $this->client = $client;
         $this->apiKey = $googleGeminiApiKey;
         $this->url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$this->apiKey";
+    }
+
+    /**
+     * Initializes a conversation with an initial prompt.
+     *
+     * @param Conversation $conversation The conversation to initialize.
+     * @return Conversation The initialized conversation.
+     */
+    public function intitConversationWithInitPrompt(Conversation $conversation) : Conversation
+    {
+        $initParts = $this->getInitPayload();
+        $initPrompt = $initParts[0]['text'] ?? null;
+
+        $message = new Message(Role::USER, $initPrompt);
+        $conversation->addMessage($message);
+        $this->entityManager->persist($message);
+
+        $response = $this->generateText($initPrompt);
+        if ($response) {
+            $message = new Message(Role::MODEL, $response);
+            $conversation->addMessage($message);
+            $this->entityManager->persist($message);
+        } else {
+            throw new \Exception("Failed to generate initial response from Gemini API.");
+        }
+
+        return $conversation;
+    }
+
+    /**
+     * Creates a new conversation for a given person with an initial prompt.
+     *
+     * @param Person $person The person to create the conversation for.
+     * @return Conversation The created conversation.
+     */
+    public function conversationFactory(Person $person): Conversation
+    {
+        $conversation = new Conversation();
+        $conversation->setPerson($person);
+        $conversation = $this->intitConversationWithInitPrompt($conversation);
+
+        $this->entityManager->persist($conversation);
+        $this->entityManager->flush();
+        return $conversation;
     }
 
     /**
@@ -94,7 +141,9 @@ class GeminiService
      *
      * @param object $entity The entity to create the schema for.
      * @return array The response schema.
-     */    public function createResponseSchemaForGivenEntity(object $entity): array
+     */    
+    
+     public function createResponseSchemaForGivenEntity(object $entity): array
     {
         $className = get_class($entity);
         $metadata = $this->entityManager->getClassMetadata($className);
@@ -154,5 +203,43 @@ class GeminiService
             'float', 'decimal' => 'NUMBER',
             default => 'STRING',
         };
+    }
+
+    /**
+     * Generates the initial payload for the conversation.
+     *
+     * @return array The initial payload.
+     */
+    private function getInitPayload(): array 
+    {
+        $filePath = dirname(__DIR__, 2) . "/config/prompt.txt";
+        $textContent = "";
+        $csvFilesPaths = ["src/DataFixtures/car-operations.csv", "src/DataFixtures/concessions.csv"];
+
+        if (file_exists($filePath)) {
+            $textContent = file_get_contents($filePath);
+        } else {
+            $textContent = "No initial prompt found.";
+        }
+
+        $parts = [['text' => $textContent]];
+
+        // foreach ($csvFilesPaths as $filePath) {
+        //     if (file_exists($filePath) && is_readable($filePath)) {
+        //         $fileContent = file_get_contents($filePath);
+        //         $mimeType ='text/csv';
+
+        //         $parts[] = [
+        //             'fileData' => [
+        //                 'mimeType' => $mimeType,
+        //                 'data' => base64_encode($fileContent),
+        //             ],
+        //         ];
+        //     } else {
+        //         // Log or handle the error for non-existent/unreadable files
+        //         error_log("CSV file not found or not readable: " . $filePath);
+        //     }
+        // }
+        return $parts;
     }
 }
