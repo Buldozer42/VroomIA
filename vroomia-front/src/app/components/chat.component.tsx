@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
@@ -10,37 +10,43 @@ import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
+import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
+import { RootState } from "../store/store";
 
 const ChatComponent = () => {
   const dispatch = useDispatch();
 
-  // Messages du chat (role: user | bot)
-  const [messages, setMessages] = useState<{ role: string; text: string }[]>([]);
-  // Texte saisi dans l’input
+  const [messages, setMessages] = useState<{ role: string; text: string }[]>(
+    []
+  );
   const [input, setInput] = useState("");
 
-  // États pour Joyride (le tutoriel)
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { drawerOpen, selectedTab } = useSelector((state: RootState) => state.ui);
 
-  // Définition des étapes du tutoriel
   const steps: Step[] = [
     {
       target: ".chat-screen",
-      content: "Bienvenue sur VroomIA, votre assistant intelligent de gestion automobile.",
+      content:
+        "Bienvenue sur VroomIA, votre assistant intelligent de gestion automobile.",
     },
     {
       target: ".chat-message",
-      content: "Interagissez avec VroomIA afin d’identifier précisément les besoins de votre véhicule et d’optimiser la gestion de votre prise de rendez-vous.",
+      content:
+        "Interagissez avec VroomIA afin d’identifier précisément les besoins de votre véhicule et d’optimiser la gestion de votre prise de rendez-vous.",
     },
   ];
 
-  // Lance automatiquement le tutoriel au montage du composant
   useEffect(() => {
     setRun(true);
   }, []);
 
-  // Gestion des événements du tutoriel
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, index, type } = data;
 
@@ -52,7 +58,6 @@ const ChatComponent = () => {
     }
   };
 
-  // Simule l’ajout d’une opération au store Redux
   const simulateSingleOperationAdd = (title: string) => {
     const operations = [
       {
@@ -115,7 +120,6 @@ const ChatComponent = () => {
     }
   };
 
-  // Simule l’ajout d’un rendez-vous
   const simulateAppointmentAdd = () => {
     dispatch(
       addAppointment({
@@ -128,13 +132,9 @@ const ChatComponent = () => {
     );
   };
 
-  // Simule l’ajout d’un garage
   const simulateGarageAdd = () => {
     dispatch(
-      addGarageEntry({
-        label: "Nom du garage",
-        value: "Garage du Centre",
-      })
+      addGarageEntry({ label: "Nom du garage", value: "Garage du Centre" })
     );
     dispatch(
       addGarageEntry({
@@ -150,7 +150,6 @@ const ChatComponent = () => {
     );
   };
 
-  // Simule l’ajout d’un véhicule
   const simulateVehicleAdd = () => {
     dispatch(
       addVehicle({
@@ -165,11 +164,9 @@ const ChatComponent = () => {
     );
   };
 
-  // Gestion de l’envoi du message utilisateur
   const handleSend = async () => {
     if (!input.trim()) return;
 
-    // Ajout du message utilisateur dans la liste
     const newMessages = [...messages, { role: "user", text: input }];
     setMessages(newMessages);
     setInput("");
@@ -183,23 +180,41 @@ const ChatComponent = () => {
       "diagnostic moteur",
     ];
 
-    // Si le message contient une opération connue
     const matched = keywords.find((word) => lowerInput.includes(word));
 
     if (matched) {
       simulateSingleOperationAdd(matched);
       return;
-    } 
-    // Sinon selon le mot clé, simuler l’ajout correspondant
-    else if (lowerInput.includes("garage")) {
+    } else if (lowerInput.includes("garage")) {
       simulateGarageAdd();
-      setMessages((prev) => [...prev, { role: "bot", text: "Garage ajouté ! ✅" }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Garage ajouté ! ✅" },
+      ]);
     } else if (lowerInput.includes("rendez-vous")) {
       simulateAppointmentAdd();
-      setMessages((prev) => [...prev, { role: "bot", text: "Rendez-vous ajouté ! 📅✅" }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
+      ]);
     } else if (lowerInput.includes("véhicule")) {
       simulateVehicleAdd();
-      setMessages((prev) => [...prev, { role: "bot", text: "Véhicule ajouté ! 🚗✅" }]);
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
+      ]);
+    }
+  };
+
+  // ===➡️ Clics sur les cartes : dispatch vers Redux
+  const handleCardClick = (tab: DrawerType) => {
+    if (drawerOpen && selectedTab === tab) {
+      dispatch(closeDrawer());
+      setTimeout(() => {
+        dispatch(openDrawer(tab));
+      }, 100);
+    } else {
+      dispatch(openDrawer(tab));
     }
   };
 
@@ -223,14 +238,13 @@ const ChatComponent = () => {
 
       <main className="h-screen w-full bg-base-200 p-2 flex justify-center items-center">
         <div className="w-full h-full bg-base-100 rounded-box shadow p-4 flex flex-col p-2">
-          {/* Titre */}
           <div className="flex flex-row chat-screen">
             <h1 className="text-2xl font-bold text-left font-racing mt-auto">
               VroomIA
             </h1>
             <ChatBubbleLeftRightIcon className="w-6 mt-auto mb-auto ml-2" />
           </div>
-          {/* Zone des messages */}
+
           <div className="flex-1 overflow-y-auto space-y-2 chat-messages">
             {messages.map((msg, idx) => (
               <div
@@ -242,20 +256,58 @@ const ChatComponent = () => {
                 <div
                   className={`rounded-3xl px-4 py-2 max-w-xs shadow ${
                     msg.role === "user"
-                      ? "bg-white-500 text-black"
-                      : "bg-gray-200 text-black"
+                      ? "bg-gray-200 text-black"
+                      : "bg-white-500 text-black"
                   }`}
                 >
                   {msg.text}
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
+
+          {/* 🟦 Cartes de navigation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 mb-2">
+            <div
+              /* todo : add action to book reservation */
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Prendre un rendez-vous</h2>
+                <p className="text-xs">Réservez une date avec votre garage.</p>
+              </div>
+            </div>
+            <div
+              onClick={() => handleCardClick("profile")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Consulter mes infos</h2>
+                <p className="text-xs">
+                  Voir mon profil utilisateur et mes véhicules.
+                </p>
+              </div>
+            </div>
+            <div
+              onClick={() => handleCardClick("stack")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Voir mes rendez-vous</h2>
+                <p className="text-xs">
+                  Liste des rendez-vous passés et futurs.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <p className="bg-gray-100 p-4 rounded-3xl text-xs text-black-200 mb-2 opacity-80">
             Veuillez-nous renseigner votre problème : bruits moteurs, voyants,
-            quel types de prestations vous voulez : vidange, contrôle technique
-            etc
+            quel types de prestations vous voulez : vidange, contrôle technique,
+            etc.
           </p>
+
           <div className="relative w-full chat-message">
             <input
               type="text"
