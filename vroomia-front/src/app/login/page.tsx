@@ -1,6 +1,5 @@
-"use client";
-import React, { useState } from "react";
-import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
+'use client';
+import React, { useState } from 'react';
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -60,29 +59,9 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left side */}
-      <div
-        className="w-full md:w-5/12 relative text-white flex flex-col justify-center items-start px-10 py-20"
-        style={{
-          backgroundImage: "url('/images/screen-vroomia.webp')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        {/* Overlay sombre en style inline */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "rgba(0, 0, 0, 0.15)", // ⬅️ ici tu ajustes l’opacité (0.0 à 1.0)
-            zIndex: 0,
-          }}
-        />
-
-        <div className="flex flex-row">
-          <h1 className="text-5xl font-extrabold italic m-auto z-100">VroomIA</h1>
-          <ChatBubbleLeftRightIcon className="w-20 m-auto z-100" />
-        </div>
-        <p className="text-2xl leading-relaxed max-w-md z-100">
+      <div className="w-full md:w-5/12 bg-gradient-to-br from-indigo-600 to-blue-500 text-white flex flex-col justify-center items-start px-10 py-20">
+        <h1 className="text-5xl font-extrabold italic mb-6">VroomIA</h1>
+        <p className="text-2xl leading-relaxed max-w-md">
           La première IA pour simplifier <br />
           votre prise de rendez-vous <br />
           automobile — rapide, intelligente <br />
@@ -94,7 +73,7 @@ export default function LoginPage() {
       <div className="w-full md:w-7/12 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md space-y-6">
           <h2 className="text-3xl font-bold italic text-gray-800 text-center">
-            {isLogin ? "Se connecter" : "Créer un compte"}
+            {isLogin ? 'Se connecter' : 'Créer un compte'}
           </h2>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -135,10 +114,13 @@ export default function LoginPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Nom
                   </label>
-                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none">
-                    <option value="particulier">Particulier</option>
-                    <option value="entreprise">Entreprise</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={lastname}
+                    onChange={(e) => setLastname(e.target.value)}
+                    placeholder="Dupont"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"
+                  />
                 </div>
 
                 {/* Phone number */}
@@ -205,12 +187,12 @@ export default function LoginPage() {
               type="submit"
               className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300"
             >
-              {isLogin ? "Se connecter" : "Créer un compte"}
+              {isLogin ? 'Se connecter' : 'Créer un compte'}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600">
-            {isLogin ? "Pas de compte ?" : "Vous avez déjà un compte ?"}{" "}
+            {isLogin ? "Pas de compte ?" : "Vous avez déjà un compte ?"}{' '}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
