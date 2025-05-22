@@ -10,6 +10,7 @@ use App\Repository\ConversationRepository;
 use App\Repository\PersonRepository;
 use App\Service\GeminiService;
 use App\Service\JsonSerializerService;
+use App\Service\SyncService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -21,12 +22,12 @@ class GeminiController extends AbstractController
 {
     private $geminiService;
     private $jsonSerializerService;
-
+    private $syncService;
     private $entityManager;
 
-    public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager)
+    public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager, SyncService $syncService)
     {
-        $this->entityManager = $entityManager;
+        $this->syncService = $syncService;
         $this->entityManager = $entityManager;
         $this->geminiService = $geminiService;
         $this->jsonSerializerService = $jsonSerializerService;
@@ -139,7 +140,9 @@ class GeminiController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }        
-    }    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
+    }    
+    
+    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
     public function updatePerson(Person $person): JsonResponse
     {
         if (!$person) {

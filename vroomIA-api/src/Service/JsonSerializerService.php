@@ -33,7 +33,9 @@ class JsonSerializerService
      * @param string $entityClass Class name of the entity to create
      * @param array $context Context for deserialization (optional)
      * @return array Array containing the created entity and any errors
-     */    public function createEntityFromJson(string $jsonData, string $entityClass, array $context = []): array
+     */    
+    
+     public function createEntityFromJson(string $jsonData, string $entityClass, array $context = []): array
     {
         try {
             $entity = $this->serializer->deserialize($jsonData, $entityClass, 'json', $context);
@@ -58,8 +60,8 @@ class JsonSerializerService
                 ];
             }
             
-            $this->entityManager->persist($entity);
-            $this->entityManager->flush();
+            // $this->entityManager->persist($entity);
+            // $this->entityManager->flush();
             
             return [
                 'success' => true,
@@ -132,7 +134,7 @@ class JsonSerializerService
                 ];
             }
             
-            $this->entityManager->flush();
+            // $this->entityManager->flush();
             
             return [
                 'success' => true,
