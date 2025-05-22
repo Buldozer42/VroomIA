@@ -7,8 +7,6 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
-use function App\Service\getInitPayload;
-
 #[ORM\Entity(repositoryClass: ConversationRepository::class)]
 class Conversation
 {
@@ -79,7 +77,7 @@ class Conversation
     public function conversationToPayload() {
         $messages = [];
 
-        $messages[] = getInitPayload();
+        // $messages[] = getInitPayload();
 
         foreach ($this->getMessages() as $message) {
             $messages[] = $message->messageToPayload();

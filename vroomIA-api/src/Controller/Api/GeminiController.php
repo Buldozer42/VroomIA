@@ -42,10 +42,7 @@ class GeminiController extends AbstractController
             return $this->json(['error' => 'Person not found'], 404);
         }
 
-        $conversation = new Conversation();
-        $conversation->setPerson($person);
-        $this->entityManager->persist($conversation);
-        $this->entityManager->flush();
+        $conversation = $this->geminiService->conversationFactory($person);
 
         return $this->json([
             'conversationId' => $conversation->getId(),
