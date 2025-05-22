@@ -6,38 +6,6 @@ import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
-
-const simulateAIResponse = (input: string) => {
-  const lower = input.toLowerCase();
-  if (lower.includes("frein") || lower.includes("bruit")) {
-    return {
-      type: "multi",
-      content:
-        "Plusieurs causes possibles, sélectionne ce qui semble pertinent :",
-      options: [
-        "Disques de frein usés",
-        "Plaquettes à changer",
-        "Liquide de frein bas",
-        "Autre chose",
-      ],
-    };
-  }
-
-  if (
-    lower.includes("je dois faire la vidange") ||
-    lower.includes("révision")
-  ) {
-    return {
-      type: "binaire",
-      content: "Souhaitez-vous planifier une vidange maintenant ?",
-    };
-  }
-
-  return {
-    type: "texte",
-    content: `Tu as dit : "${input}"`,
-  };
-};
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
 import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
@@ -70,20 +38,6 @@ const ChatComponent = () => {
         "Interagissez avec VroomIA afin d’identifier précisément les besoins de votre véhicule et d’optimiser la gestion de votre prise de rendez-vous.",
     },
   ];
-
-  function formatGeminiMessage(text : string) {
-    // 1. Remplacer `:*` et `***` par `**` (gras) correct
-    text = text.replace(/\:\*\*\*/g, "**");
-    text = text.replace(/\*\*\*/g, "**");
-  
-    // 2. Ajouter un saut de ligne après chaque bullet point
-    text = text.replace(/ \* /g, "\n* ");
-  
-    // 3. Ajouter des sauts de ligne entre les phrases finissant par un point et un espace, pour aérer
-    text = text.replace(/\. /g, ".\n\n");
-  
-    return text.trim();
-  }
 
   useEffect(() => {
     setRun(true);
