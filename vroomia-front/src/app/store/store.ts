@@ -4,13 +4,15 @@ import appointmentReducer from './slices/appointmentsSlice';
 import vehiclesReducer from './slices/vehiclesSlice';
 import garageReducer from './slices/garageSlice';
 import operationsReducer from './slices/operationsSlice';
+import uiReducer from './slices/uiSlice';
 
 export const store = configureStore({
   reducer: {
     appointment: appointmentReducer,
     vehicules: vehiclesReducer,
     garage: garageReducer,
-    operations: operationsReducer
+    operations: operationsReducer,
+    ui: uiReducer,
   },
 });
 
