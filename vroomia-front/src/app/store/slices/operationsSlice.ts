@@ -8,6 +8,10 @@ export type Operation = {
   price: number;
 };
 
+// État initial vide
+const initialState: Operation[] = [];
+
+/* Exemple d'état initial complet :
 const initialState: Operation[] = [
   {
     title: "Vidange",
@@ -50,6 +54,7 @@ const initialState: Operation[] = [
     price: 129,
   },
 ];
+*/
 
 const operationsSlice = createSlice({
   name: "operations",
@@ -59,6 +64,12 @@ const operationsSlice = createSlice({
       const index = state.findIndex((op) => op.title === action.payload);
       if (index !== -1) {
         state[index].status = !state[index].status;
+      }
+    },
+    addOperation: (state, action: PayloadAction<Operation>) => {
+      const exists = state.some(op => op.title === action.payload.title);
+      if (!exists) {
+        state.push(action.payload);
       }
     },
     setOperations: (state, action: PayloadAction<Operation[]>) => {
@@ -73,7 +84,5 @@ const operationsSlice = createSlice({
   },
 });
 
-export const { toggleStatus, setOperations, updateOperation } =
-  operationsSlice.actions;
-
+export const { toggleStatus, setOperations, updateOperation, addOperation } = operationsSlice.actions;
 export default operationsSlice.reducer;

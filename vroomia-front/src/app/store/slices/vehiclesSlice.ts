@@ -12,17 +12,7 @@ export type Vehicle = {
 };
 
 // État initial
-const initialState: Vehicle[] = [
-  {
-    immatriculation: "BF-678-AF",
-    marque: "BMW",
-    model: "Série 8",
-    year: 2018,
-    vin: "XXX",
-    mileage: 12500,
-    lastTechnicalInspectionDate: new Date("2024-06-17"),
-  },
-];
+const initialState: Vehicle[] = [];
 
 const vehicleSlice = createSlice({
   name: "vehicle",
