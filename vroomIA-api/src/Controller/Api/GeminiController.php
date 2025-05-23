@@ -7,9 +7,12 @@ use App\Entity\Person;
 use App\Entity\Message;
 use App\Entity\Role;
 use App\Entity\Vehicle;
+use App\Entity\Garage;
+use App\Entity\Adress;
+use App\Entity\Operation;
+use App\Entity\Reservation;
 use App\Repository\ConversationRepository;
 use App\Repository\PersonRepository;
-use App\Repository\VehicleRepository;
 use App\Service\GeminiService;
 use App\Service\JsonSerializerService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -61,9 +64,10 @@ class GeminiController extends AbstractController
         }
         $messages = $conversation->getMessagesString();
         $lastMessage = end($messages);
-        $this->geminiService->formatJsonData($lastMessage);
-
-        return $this->json(["response" => $this->geminiService->formatJsonData($lastMessage)]);
+        $response = $this->geminiService->formatJsonData($lastMessage);
+        // $response = $this->geminiService->formatJsonDataWithConversation($conversation);
+        
+        return $this->json(["response" => $response]);
     }
 
     #[Route('/gemini/message/send', name: 'gemini_message_send', methods: ['POST'])]
@@ -207,20 +211,35 @@ class GeminiController extends AbstractController
     #[Route('/gemini/test/jsonSerialize', name: 'gemini_test_jsonSerialize', methods: ['POST'])]
     public function jsonSerialize(
         Request $request,
-        PersonRepository $personRepository,
-        VehicleRepository $vehicleRepository
+        EntityManagerInterface $entityManager
     ): JsonResponse
     {
         $jsonData = $request->getContent();
         $entityConfigs = [
             'persons' => [
                 'class' => Person::class,
-                'repository' => $personRepository,
+                'repository' => $entityManager->getRepository(Person::class),
                 'identifier' => 'email'
             ],
             'vehicles' => [
                 'class' => Vehicle::class,
-                'repository' => $vehicleRepository,
+                'repository' => $entityManager->getRepository(Vehicle::class),
+            ],
+            'garages' => [
+                'class' => Garage::class,
+                'repository' => $entityManager->getRepository(Garage::class),
+            ],
+            'adresss' => [
+                'class' => Adress::class,
+                'repository' => $entityManager->getRepository(Adress::class),
+            ],
+            'operations' => [
+                'class' => Operation::class,
+                'repository' => $entityManager->getRepository(Operation::class),
+            ],
+            'reservations' => [
+                'class' => Reservation::class,
+                'repository' => $entityManager->getRepository(Reservation::class),
             ]
         ];
         $res = $this->jsonSerializerService->processEntities(

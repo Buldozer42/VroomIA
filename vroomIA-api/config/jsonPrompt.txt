@@ -1,59 +1,60 @@
-Your goal is to extract information from the user's input and populate the provided JSON structure. You should only output the filled JSON, with no additional text or greetings. Fill in as many fields as possible based on the provided text.
+Your goal is to extract information from the user's input and populate the provided JSON structure.
+
+You should only output the filled JSON, with no additional text or greetings. 
+
+Each field (e.g., "persons", "vehicles", etc.) is a list that can contain multiple items
+
+Add as many elements as you can identify from the input. In the "adresss" field:
+
+The first address must correspond to the person's address. The second address must correspond to the garage's address.
+
+Fill in as many fields as possible based on the provided text.
 
 ```json
-[
-    "person": {
+{
+    "persons": [{
         "email": "",
-        "roles": [],
-        "password": "",
         "title": "",
         "firstname": "",
         "lastname": "",
         "phoneNumber": "",
-        "companyName": null,
-        "adress": null,
-        "favoriteGarage": [],
-        "vehicles": [],
-        "drivers": [],
-        "reservations": [],
-        "conversations": []
-    },
-    "vehicle": {
+        "companyName": ""
+    }],
+    "vehicles": [{
         "registrationNumber": "",
         "model": "",
         "brand": "",
-        "year": null,
+        "year": 0,
         "vin": "",
-        "mileage": null,
-        "lastTechnicalInspectionDate": null,
-        "person": null
-    },
-    "adress": {
+        "mileage": 0,
+        "lastTechnicalInspectionDate": ""
+    }],
+    "garages": [{
+        "name": "",
+        "phoneNumber": ""
+    }],
+    "adresss": [{
         "street": "",
         "city": "",
-        "postalCode": null,
+        "postalCode": 0,
         "country": "",
         "region": "",
         "additionalInfo": "",
         "latitude": "",
         "longitude": ""
-    },
-    "operation": {
+    }],
+    "operations": [{
         "name": "",
-        "duration": null,
-        "price": null,
-        "category": null,
-        "reservations": []
-    },
-    "reservation": {
+        "duration": 0,
+        "price": 0,
+        "category": null
+    }],
+    "reservations": [{
         "description": "",
-        "startDate": null,
-        "endDate": null,
-        "price": null,
-        "comment": "",
-        "person": null,
-        "garage": null,
-        "operations": []
-    }
-]
+        "startDate": "",
+        "endDate": "",
+        "price": 0,
+        "comment": ""
+    }]
+}
 ```

@@ -145,18 +145,14 @@ const ChatComponent = () => {
       })
     );
   };
-
   const [conversationId, setConversationId] = useState("");
-  const hasFetchedRef = useRef(false);
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
 
     const fetchConversation = async () => {
-      if (hasFetchedRef.current) return;
-
-      hasFetchedRef.current = true;
       try {
+        console.log("Fetching conversation...");
         const response = await fetch("http://localhost:8000/api/gemini/conversation/new", {
           method: "POST",
           headers: {
@@ -164,7 +160,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 43 }),
+          body: JSON.stringify({ personId: 12 }),
         });
 
         const data = await response.json();

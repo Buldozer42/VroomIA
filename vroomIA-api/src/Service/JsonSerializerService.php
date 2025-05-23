@@ -362,35 +362,89 @@ class JsonSerializerService
     }
     
     /**
-     * Maps field names from JSON to entity property names
-     * 
-     * @param array $data Raw data from JSON
-     * @param string $entityClass Entity class name
-     * @return array Data with mapped field names
+     * Check if an entity data is empty (all fields are empty or default values)
+     *
+     * @param array $entityData Data provided for the entity
+     * @param string $entityClass Class name of the entity
+     * @return bool True if the entity is considered empty
      */
-    private function mapFieldNames(array $data, string $entityClass): array
+    private function isEntityEmpty(array $entityData, string $entityClass): bool
     {
-        // Define field name mappings for specific entities
-        $fieldMappings = [
-            'App\\Entity\\Person' => [
-                'adress' => 'adress',
-                'firstName' => 'firstname',
-                'lastName' => 'lastname',
-            ]
-        ];
+        $metadata = $this->entityManager->getClassMetadata($entityClass);
+        $isEmpty = true;
         
-        // Check if we have mappings for this entity
-        if (isset($fieldMappings[$entityClass])) {
-            foreach ($fieldMappings[$entityClass] as $jsonField => $entityField) {
-                // If the JSON field exists but the entity field doesn't
-                if (isset($data[$jsonField]) && !isset($data[$entityField])) {
-                    $data[$entityField] = $data[$jsonField];
-                    unset($data[$jsonField]);
+        foreach ($metadata->getFieldNames() as $fieldName) {
+            if ($fieldName === 'id') {
+                continue;
+            }
+            
+            if (!array_key_exists($fieldName, $entityData)) {
+                continue;
+            }
+            
+            $value = $entityData[$fieldName];
+            $type = $metadata->getTypeOfField($fieldName);
+              // Vérifier si la valeur n'est pas vide ou différente de la valeur par défaut
+            $isDefaultValue = match($type) {
+                'string' => $value === '',
+                'integer', 'smallint', 'bigint' => $value === 0,
+                'boolean' => $value === false,
+                'float', 'decimal' => $value === 0.0,
+                'date', 'datetime' => $value === null || $value === (new \DateTime())->format('Y-m-d\TH:i:s\Z'),
+                'array', 'json' => $value === [] || $value === null,
+                default => $value === null
+            };
+            
+            if (!$isDefaultValue) {
+                $isEmpty = false;
+                break;
+            }
+        }
+        
+        // Si des relations ne sont pas vides, l'entité n'est pas vide
+        foreach ($metadata->getAssociationNames() as $associationName) {
+            if (!array_key_exists($associationName, $entityData)) {
+                continue;
+            }
+            
+            $associatedValue = $entityData[$associationName];
+            if ($associatedValue !== null && $associatedValue !== []) {
+                $isEmpty = false;
+                break;
+            }
+        }
+        
+        return $isEmpty;
+    }
+    
+    /**
+     * Normalize date fields in entity data by replacing null or empty dates with today's date
+     *
+     * @param array $entityData Entity data with date fields to normalize
+     * @param string $entityClass Class name of the entity
+     * @return array The entity data with normalized date fields
+     */
+    private function normalizeDateFields(array $entityData, string $entityClass): array
+    {
+        $metadata = $this->entityManager->getClassMetadata($entityClass);
+        $today = new \DateTime();
+        $todayFormatted = $today->format('Y-m-d\TH:i:s\Z');
+        
+        foreach ($metadata->getFieldNames() as $fieldName) {
+            if (!array_key_exists($fieldName, $entityData)) {
+                continue;
+            }
+            
+            $type = $metadata->getTypeOfField($fieldName);
+            if ($type === 'date' || $type === 'datetime') {
+                // Remplacer les dates null ou vides par la date du jour
+                if ($entityData[$fieldName] === null || $entityData[$fieldName] === '') {
+                    $entityData[$fieldName] = $todayFormatted;
                 }
             }
         }
         
-        return $data;
+        return $entityData;
     }
 
     /**
@@ -427,11 +481,17 @@ class JsonSerializerService
             $repository = $config['repository'];
             $identifierField = $config['identifier'] ?? 'id';
 
-            $entityResults = [];
-            $entitiesData = is_array($decodedData[$entityType]) ? $decodedData[$entityType] : [$decodedData[$entityType]];
+            $entityResults = [];            $entitiesData = is_array($decodedData[$entityType]) ? $decodedData[$entityType] : [$decodedData[$entityType]];
 
             foreach ($entitiesData as $entityData) {
-                try {
+                try {                    // Vérifier si l'entité est vide avant de commencer le traitement
+                    if ($this->isEntityEmpty($entityData, $entityClass)) {
+                        continue; // Ignorer cette entité car elle est vide
+                    }
+                    
+                    // Normaliser les champs de dates (null ou chaînes vides -> date du jour)
+                    $entityData = $this->normalizeDateFields($entityData, $entityClass);
+                    
                     $embeddedResult = $this->processEmbeddedEntities($entityData, $entityClass);
                     $entityData = $embeddedResult['data'];
                     $associations = $embeddedResult['associations'];
