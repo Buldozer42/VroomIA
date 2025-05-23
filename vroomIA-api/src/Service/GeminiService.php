@@ -37,8 +37,7 @@ class GeminiService
      */
     public function intitConversationWithInitPrompt(Conversation $conversation) : Conversation
     {
-        $initParts = $this->getInitPayload();
-        $initPrompt = $initParts[0]['text'] ?? null;
+        $initPrompt = $this->getInitPayload();
 
         $message = new Message(Role::USER, $initPrompt);
         $conversation->addMessage($message);
@@ -46,7 +45,7 @@ class GeminiService
 
         $response = $this->generateText($initPrompt);
         if ($response) {
-            $message = new Message(Role::MODEL, $response);
+            $message = new Message(Role::MODEL, $response, ["/DataFixtures/car-operations.csv", "/DataFixtures/concessions.csv"]);
             $conversation->addMessage($message);
             $this->entityManager->persist($message);
         } else {
@@ -114,6 +113,24 @@ class GeminiService
 
         $data = $response->toArray(false);
         return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    }
+
+    public function formatJsonData(string $aiPayload): ?string {
+        $filePath = dirname(__DIR__, 2) . "/config/jsonPrompt.txt";
+        $textContent = "";
+
+        if (file_exists($filePath)) {
+            $textContent = file_get_contents($filePath);
+        } else {
+            $textContent = "No initial prompt found.";
+        }
+        $response = $this->generateText($textContent . $aiPayload);
+
+        if (!$response) {
+            throw new \Exception("Failed to generate initial response from Gemini API.");
+        }
+        // handleJson($response);
+        return $response;
     }
 
     /**
@@ -208,38 +225,18 @@ class GeminiService
     /**
      * Generates the initial payload for the conversation.
      *
-     * @return array The initial payload.
+     * @return string The initial payload.
      */
-    private function getInitPayload(): array 
+    private function getInitPayload(): string 
     {
         $filePath = dirname(__DIR__, 2) . "/config/prompt.txt";
         $textContent = "";
-        $csvFilesPaths = ["src/DataFixtures/car-operations.csv", "src/DataFixtures/concessions.csv"];
 
         if (file_exists($filePath)) {
             $textContent = file_get_contents($filePath);
         } else {
-            $textContent = "No initial prompt found.";
+           echo "Error while fetching the initial payload";
         }
-
-        $parts = [['text' => $textContent]];
-
-        // foreach ($csvFilesPaths as $filePath) {
-        //     if (file_exists($filePath) && is_readable($filePath)) {
-        //         $fileContent = file_get_contents($filePath);
-        //         $mimeType ='text/csv';
-
-        //         $parts[] = [
-        //             'fileData' => [
-        //                 'mimeType' => $mimeType,
-        //                 'data' => base64_encode($fileContent),
-        //             ],
-        //         ];
-        //     } else {
-        //         // Log or handle the error for non-existent/unreadable files
-        //         error_log("CSV file not found or not readable: " . $filePath);
-        //     }
-        // }
-        return $parts;
+        return $textContent;
     }
 }

@@ -50,6 +50,22 @@ class GeminiController extends AbstractController
         ]);
     }
 
+    #[Route('/gemini/message/confirm', name: 'gemini_message_confirm', methods: ['POST'])]
+    public function confirmInfos(Request $request, ConversationRepository $conversationRepository): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+        $conversationId = $data['conversationId'] ?? null;
+        
+        $conversation = $conversationRepository->find($conversationId);
+        if (!$conversation) {
+            return $this->json(['error' => "Conversation not found id : $conversationId"], 404);
+        }
+        $messages = $conversation->getMessagesString();
+        $lastMessage = end($messages);
+        $this->geminiService->formatJsonData($lastMessage);
+
+        return $this->json(["response" => $this->geminiService->formatJsonData($lastMessage)]);
+    }
+
     #[Route('/gemini/message/send', name: 'gemini_message_send', methods: ['POST'])]
     public function sendMessage(Request $request, ConversationRepository $conversationRepository): JsonResponse        
     {
