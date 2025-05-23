@@ -45,6 +45,11 @@ php bin/console doctrine:database:create
 ```bash
 php bin/console doctrine:migrations:migrate
 ```
+6. Charger les fixtures (données exemples)
+```
+php bin/console doctrine:fixtures:load
+```
+
 6. Créer les clées privée et publique :
 ```bash
 mkdir -p config/jwt

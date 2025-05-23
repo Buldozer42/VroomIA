@@ -2,16 +2,17 @@
 
 namespace App\Service;
 
+use App\Entity\Person;
 use App\Entity\Vehicle;
 use App\Repository\VehicleRepository;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class VehicleService
 {
-    private HttpClientInterface $client;
+    private Person $client;
     private VehicleRepository $vehicleRepository;
 
-    public function __construct(HttpClientInterface $client, VehicleRepository $vehicleRepository)
+    public function __construct(Person $client, VehicleRepository $vehicleRepository)
     {
         $this->client = $client;
         $this->vehicleRepository = $vehicleRepository;
@@ -54,7 +55,7 @@ class VehicleService
      * @param string $registrationNumber
      * @return bool
      */
-    private function checkRegistrationNumber(string $registrationNumber): bool
+    public function checkRegistrationNumber(string $registrationNumber): bool
     {
         return preg_match('/^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$/', $registrationNumber);
     }
