@@ -17,6 +17,7 @@ const ChatComponent = () => {
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
     []
   );
+  const [loadingInput, setLoadingInput] = useState(false);
   const [input, setInput] = useState("");
   const hasFetchedRef = useRef(false);
   const [run, setRun] = useState(false);
@@ -25,17 +26,19 @@ const ChatComponent = () => {
   const [isConfirmStep, setIsConfirmStep] = useState(false);
   const AnimatedDots = () => {
     const [dots, setDots] = React.useState("");
-  
+
     React.useEffect(() => {
       const interval = setInterval(() => {
         setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
       }, 500);
       return () => clearInterval(interval);
     }, []);
-  
-    return <span className="text-gray-500 text-sm">Veuillez patientez{dots}</span>;
+
+    return (
+      <span className="text-gray-500 text-sm">Veuillez patientez{dots}</span>
+    );
   };
-  
+
   const steps: Step[] = [
     {
       target: ".chat-screen",
@@ -70,7 +73,6 @@ const ChatComponent = () => {
 
     // Optionnel : tu peux aussi faire une vérification backend ici
     // fetch("/api/verify", { headers: { Authorization: `Bearer ${token}` } })
-
   }, [router]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
@@ -163,7 +165,7 @@ const ChatComponent = () => {
   useEffect(() => {
     const fetchConversation = async () => {
       if (hasFetchedRef.current) return;
-
+      setLoadingInput(true);
       hasFetchedRef.current = true;
       const token = localStorage.getItem("token");
 
@@ -175,7 +177,7 @@ const ChatComponent = () => {
             headers: {
               Accept: "application/json",
               "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, 
+              Authorization: `Bearer ${token}`,
             },
             credentials: "include",
           }
@@ -190,6 +192,8 @@ const ChatComponent = () => {
         setConversationId(data.conversationId);
       } catch (error) {
         console.error("Erreur lors de la récupération des messages:", error);
+      } finally {
+        setLoadingInput(false);
       }
     };
 
@@ -235,7 +239,7 @@ const ChatComponent = () => {
     const token = localStorage.getItem("token");
     setMessages(newMessages);
     setInput("");
-    
+
     try {
       const response = await fetch(
         "http://localhost:8000/api/gemini/message/send",
@@ -244,7 +248,7 @@ const ChatComponent = () => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
             messageContent: message,
@@ -480,6 +484,7 @@ const ChatComponent = () => {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSend()}
+                disabled={loadingInput} // ⛔ désactivé si pas encore chargé
               />
               <button
                 onClick={() => handleSend()}
