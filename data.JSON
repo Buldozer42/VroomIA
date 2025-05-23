@@ -1,0 +1,32 @@
+{
+    "persons": [
+    {
+        "email": "john@example.com", 
+        "firstname": "John",
+        "lastname": "Doe",
+        "title": "Mr"
+    },
+    {
+        "email": "jane@example.com",
+        "firstname": "Jane",
+        "lastname": "Smith",
+        "title": "Mme"
+    }
+    ],
+    "vehicles": [
+    {
+        "brand": "Peugeot",
+        "model": "208",
+        "registrationNumber": "AB-123-CD",
+        "year": 2019,
+        "vin": "1HGCM82633A123456"
+    },
+    {
+        "brand": "Renault",
+        "model": "Clio",
+        "registrationNumber": "EF-456-GH",
+        "year": 2020,
+        "vin": "1HGCM82633A654321"
+    }
+    ]
+}

@@ -18,7 +18,7 @@ class Conversation
     /**
      * @var Collection<int, Message>
      */
-    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'conversation')]
+    #[ORM\OneToMany(targetEntity: Message::class, mappedBy: 'conversation', cascade: ['persist'])]
     private Collection $messages;
 
     #[ORM\ManyToOne(inversedBy: 'conversations')]

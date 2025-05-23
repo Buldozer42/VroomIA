@@ -6,6 +6,11 @@ use App\Entity\Conversation;
 use App\Entity\Person;
 use App\Entity\Message;
 use App\Entity\Role;
+use App\Entity\Vehicle;
+use App\Entity\Garage;
+use App\Entity\Adress;
+use App\Entity\Operation;
+use App\Entity\Reservation;
 use App\Repository\ConversationRepository;
 use App\Repository\PersonRepository;
 use App\Service\GeminiService;
@@ -21,12 +26,10 @@ class GeminiController extends AbstractController
 {
     private $geminiService;
     private $jsonSerializerService;
-
     private $entityManager;
 
     public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager)
     {
-        $this->entityManager = $entityManager;
         $this->entityManager = $entityManager;
         $this->geminiService = $geminiService;
         $this->jsonSerializerService = $jsonSerializerService;
@@ -61,9 +64,10 @@ class GeminiController extends AbstractController
         }
         $messages = $conversation->getMessagesString();
         $lastMessage = end($messages);
-        $this->geminiService->formatJsonData($lastMessage);
-
-        return $this->json(["response" => $this->geminiService->formatJsonData($lastMessage)]);
+        $response = $this->geminiService->formatJsonData($lastMessage);
+        // $response = $this->geminiService->formatJsonDataWithConversation($conversation);
+        
+        return $this->json(["response" => $response]);
     }
 
     #[Route('/gemini/message/send', name: 'gemini_message_send', methods: ['POST'])]
@@ -155,7 +159,9 @@ class GeminiController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }        
-    }    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
+    }    
+    
+    #[Route('/gemini/test/update-person/{id}', name: 'gemini_test_update-person', methods: ['GET'])]
     public function updatePerson(Person $person): JsonResponse
     {
         if (!$person) {
@@ -200,5 +206,49 @@ class GeminiController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }
+    }
+
+    #[Route('/gemini/test/jsonSerialize', name: 'gemini_test_jsonSerialize', methods: ['POST'])]
+    public function jsonSerialize(
+        Request $request,
+        EntityManagerInterface $entityManager
+    ): JsonResponse
+    {
+        $jsonData = $request->getContent();
+        $entityConfigs = [
+            'persons' => [
+                'class' => Person::class,
+                'repository' => $entityManager->getRepository(Person::class),
+                'identifier' => 'email'
+            ],
+            'vehicles' => [
+                'class' => Vehicle::class,
+                'repository' => $entityManager->getRepository(Vehicle::class),
+            ],
+            'garages' => [
+                'class' => Garage::class,
+                'repository' => $entityManager->getRepository(Garage::class),
+            ],
+            'adresss' => [
+                'class' => Adress::class,
+                'repository' => $entityManager->getRepository(Adress::class),
+            ],
+            'operations' => [
+                'class' => Operation::class,
+                'repository' => $entityManager->getRepository(Operation::class),
+            ],
+            'reservations' => [
+                'class' => Reservation::class,
+                'repository' => $entityManager->getRepository(Reservation::class),
+            ]
+        ];
+        $res = $this->jsonSerializerService->processEntities(
+            $jsonData,
+            $entityConfigs,
+        );
+
+        return $this->json([
+            'res' => $res,
+        ]);
     }
 }

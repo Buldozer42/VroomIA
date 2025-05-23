@@ -157,10 +157,11 @@ const ChatComponent = () => {
       })
     );
   };
-
   const [conversationId, setConversationId] = useState("");
-
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchConversation = async () => {
       if (hasFetchedRef.current) return;
 
@@ -186,8 +187,8 @@ const ChatComponent = () => {
           console.error("Erreur du backend:", data.error);
         } else {
           console.log("Réponse du backend:", data.conversationId);
+          setConversationId(data.conversationId);
         }
-        setConversationId(data.conversationId);
       } catch (error) {
         console.error("Erreur lors de la récupération des messages:", error);
       }

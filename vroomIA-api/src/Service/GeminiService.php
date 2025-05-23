@@ -2,10 +2,15 @@
 
 namespace App\Service;
 
+use App\Entity\Adress;
 use App\Entity\Conversation;
+use App\Entity\Garage;
 use App\Entity\Message;
+use App\Entity\Operation;
+use App\Entity\Reservation;
 use App\Entity\Role;
 use App\Entity\Person;
+use App\Entity\Vehicle;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
@@ -20,13 +25,15 @@ class GeminiService
     private HttpClientInterface $client;
     private string $apiKey;
     private string $url;
+    private JsonSerializerService $jsonSerializerService;
 
-    public function __construct(HttpClientInterface $client, string $googleGeminiApiKey, EntityManagerInterface $entityManager)
+    public function __construct(HttpClientInterface $client, string $googleGeminiApiKey, EntityManagerInterface $entityManager, JsonSerializerService $jsonSerializerService)
     {
         $this->entityManager = $entityManager;
         $this->client = $client;
         $this->apiKey = $googleGeminiApiKey;
         $this->url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$this->apiKey";
+        $this->jsonSerializerService = $jsonSerializerService;
     }
 
     /**
@@ -98,6 +105,34 @@ class GeminiService
     }
 
     /**
+     * Generates a response using the Gemini API from a given prompt with a specific MIME type.
+     *
+     * @param string $prompt The prompt to generate text from.
+     * @param string $mimeType The MIME type for the response.
+     * @return string|null The generated text or null if an error occurs.
+     */
+    public function generateTextWitMimeType(string $prompt, string $mimeType): ?string
+    {
+        $response = $this->client->request('POST', $this->url, [
+            'json' => [
+                'contents' => [
+                    [
+                        'parts' => [
+                            ['text' => $prompt]
+                        ]
+                    ]
+                ],
+                'generationConfig' => [
+                    'responseMimeType' => $mimeType,
+                ]
+            ]
+        ]);
+
+        $data = $response->toArray(false);
+        return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+    } 
+
+    /**
      * Generates a response using the Gemini API folwing a given Conversation.
      *
      * @param Conversation $conversation The conversation to generate text from.
@@ -114,7 +149,7 @@ class GeminiService
         $data = $response->toArray(false);
         return $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
     }
-
+    
     public function formatJsonData(string $aiPayload): ?string {
         $filePath = dirname(__DIR__, 2) . "/config/jsonPrompt.txt";
         $textContent = "";
@@ -124,12 +159,103 @@ class GeminiService
         } else {
             $textContent = "No initial prompt found.";
         }
-        $response = $this->generateText($textContent . $aiPayload);
+        
+        $response = $this->generateTextWitMimeType($textContent . $aiPayload, "application/json");
 
         if (!$response) {
             throw new \Exception("Failed to generate initial response from Gemini API.");
         }
-        // handleJson($response);
+        
+        $entityConfigs = [
+            'persons' => [
+                'class' => Person::class,
+                'repository' => $this->entityManager->getRepository(Person::class),
+                'identifier' => 'email'
+            ],
+            'vehicles' => [
+                'class' => Vehicle::class,
+                'repository' => $this->entityManager->getRepository(Vehicle::class),
+            ],
+            'garages' => [
+                'class' => Garage::class,
+                'repository' => $this->entityManager->getRepository(Garage::class),
+            ],
+            'adresss' => [
+                'class' => Adress::class,
+                'repository' => $this->entityManager->getRepository(Adress::class),
+            ],
+            'operations' => [
+                'class' => Operation::class,
+                'repository' => $this->entityManager->getRepository(Operation::class),
+            ],
+            'reservations' => [
+                'class' => Reservation::class,
+                'repository' => $this->entityManager->getRepository(Reservation::class),
+            ]
+        ];
+
+        $this->jsonSerializerService->processEntities(
+            $response,
+            $entityConfigs,
+        );
+        return $response;
+    }
+    
+    public function formatJsonDataWithConversation(Conversation $conversation): ?string {
+        $filePath = dirname(__DIR__, 2) . "/config/jsonPrompt.txt";
+        $textContent = "";
+
+        if (file_exists($filePath)) {
+            $textContent = file_get_contents($filePath);
+        } else {
+            $textContent = "No initial prompt found.";
+        }
+
+        $jsonPromptMessage = new Message(Role::USER, $textContent);
+        $conversation->addMessage($jsonPromptMessage);
+        $response = $this->generateWithConversationAndGenerationConfig($conversation, [
+                "responseMimeType" => "application/json",
+                "responseSchema" => $this->createFullResponseSchema(),
+        ]);
+        $conversation->removeMessage($jsonPromptMessage);
+
+        if (!$response) {
+            throw new \Exception("Failed to generate initial response from Gemini API.");
+        }
+
+        $entityConfigs = [
+            'persons' => [
+                'class' => Person::class,
+                'repository' => $this->entityManager->getRepository(Person::class),
+                'identifier' => 'email'
+            ],
+            'vehicles' => [
+                'class' => Vehicle::class,
+                'repository' => $this->entityManager->getRepository(Vehicle::class),
+            ],
+            'garages' => [
+                'class' => Garage::class,
+                'repository' => $this->entityManager->getRepository(Garage::class),
+            ],
+            'adresss' => [
+                'class' => Adress::class,
+                'repository' => $this->entityManager->getRepository(Adress::class),
+            ],
+            'operations' => [
+                'class' => Operation::class,
+                'repository' => $this->entityManager->getRepository(Operation::class),
+            ],
+            'reservations' => [
+                'class' => Reservation::class,
+                'repository' => $this->entityManager->getRepository(Reservation::class),
+            ]
+        ];
+
+        $res = $this->jsonSerializerService->processEntities(
+            $response,
+            $entityConfigs,
+        );
+
         return $response;
     }
 
@@ -200,6 +326,38 @@ class GeminiService
                 "type" => "OBJECT",
                 "properties" => $properties,
                 "propertyOrdering" => $propertyOrdering
+            ]
+        ];
+    }
+
+    /**
+     * Creates a full response schema for the application. (Not tested yet)
+     *
+     * @return array The full response schema.
+     */
+    private function createFullResponseSchema(): array
+    {
+        $entities = [
+            Person::class,
+            Vehicle::class,
+            Garage::class,
+            Adress::class,
+            Operation::class,
+            Reservation::class
+        ];
+
+        $schemas = [];
+        foreach ($entities as $entity) {
+            $schemas[] = $this->createResponseSchemaForGivenEntity(new $entity());
+        }
+
+        return [
+            "type" => "OBJECT",
+            "properties" => [
+                "data" => [
+                    "type" => "ARRAY",
+                    "items" => $schemas
+                ]
             ]
         ];
     }
