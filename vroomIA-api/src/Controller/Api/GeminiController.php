@@ -38,12 +38,10 @@ class GeminiController extends AbstractController
     #[Route('/gemini/conversation/new', name: 'gemini_conversation_new', methods: ['POST'])]
     public function newConversation(Request $request, PersonRepository $personRepository): JsonResponse
     {
-        $data = json_decode($request->getContent(), true);
-        $personId = $data['personId'] ?? null;
+        $person = $this->getUser();
 
-        $person = $personRepository->find($personId);
         if (!$person) {
-            return $this->json(['error' => 'Person not found'], 404);
+            return $this->json(['error' => 'User not found'], 404);
         }
 
         $conversation = $this->geminiService->conversationFactory($person);

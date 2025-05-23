@@ -38,7 +38,7 @@ export default function LoginPage() {
 
     const url = isLogin
       ? "http://localhost:8000/api/login"
-      : "http://localhost:8000/api/register";
+      : "http://localhost:8000/api/person/register";
 
     try {
       const response = await fetch(url, {

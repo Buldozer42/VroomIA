@@ -15,4 +15,4 @@ class AuthController extends AbstractController
         // Le json_login gère tout
         return $this->json(['error' => 'Authentication should be handled by JSON login']);
     }
-}
+}  

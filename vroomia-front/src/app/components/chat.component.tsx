@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import Joyride, { Step, CallBackProps, STATUS } from "react-joyride";
 import { PaperAirplaneIcon } from "@heroicons/react/24/solid";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
@@ -9,6 +8,8 @@ import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
+import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice";
+import { RootState } from "../store/store";
 import ReactMarkdown from "react-markdown";
 
 const ChatComponent = () => {
@@ -22,6 +23,9 @@ const ChatComponent = () => {
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { drawerOpen, selectedTab } = useSelector(
+    (state: RootState) => state.ui
+  );
   const [isConfirmStep, setIsConfirmStep] = useState(false);
   const AnimatedDots = () => {
     const [dots, setDots] = React.useState("");
@@ -56,22 +60,6 @@ const ChatComponent = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
-
-  const router = useRouter();
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    // Si aucun token, redirection vers /login
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    // Optionnel : tu peux aussi faire une vérification backend ici
-    // fetch("/api/verify", { headers: { Authorization: `Bearer ${token}` } })
-
-  }, [router]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status, index, type } = data;
@@ -161,26 +149,20 @@ const ChatComponent = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
+    const token = localStorage.getItem("token");
 
     const fetchConversation = async () => {
-      if (hasFetchedRef.current) return;
-
-      hasFetchedRef.current = true;
-      const token = localStorage.getItem("token");
-
       try {
-        const response = await fetch(
-          "http://localhost:8000/api/gemini/conversation/new",
-          {
-            method: "POST",
-            headers: {
-              Accept: "application/json",
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`, 
-            },
-            credentials: "include",
-          }
-        );
+        console.log("Fetching conversation...");
+        const response = await fetch("http://localhost:8000/api/gemini/conversation/new", {
+          method: "POST",
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          credentials: 'include',
+        });
 
         const data = await response.json();
         if (data.error) {
@@ -233,10 +215,9 @@ const ChatComponent = () => {
     const message = text ?? input;
     setLoading(true); // <-- start loading
     const newMessages = [...messages, { role: "user", text: message }];
-    const token = localStorage.getItem("token");
     setMessages(newMessages);
     setInput("");
-    
+
     try {
       const response = await fetch(
         "http://localhost:8000/api/gemini/message/send",
@@ -245,7 +226,7 @@ const ChatComponent = () => {
           headers: {
             "Content-Type": "application/json",
             Accept: "application/json",
-            Authorization: `Bearer ${token}`, 
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
           body: JSON.stringify({
             messageContent: message,
@@ -327,6 +308,18 @@ const ChatComponent = () => {
   };
 
   // ===➡️ Clics sur les cartes : dispatch vers Redux
+  const handleCardClick = (tab: DrawerType) => {
+    console.log(tab);
+    if (drawerOpen && selectedTab === tab) {
+      dispatch(closeDrawer());
+      setTimeout(() => {
+        dispatch(openDrawer(tab));
+      }, 100);
+    } else {
+      dispatch(openDrawer(tab));
+    }
+  };
+
   const LineButtonConfirm = () => {
     const onConfirm = async () => {
       setIsConfirmStep(false);
@@ -464,6 +457,42 @@ const ChatComponent = () => {
             )}
             <div ref={messagesEndRef} />
           </div>
+
+          {/* 🟦 Cartes de navigation */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 mt-4 mb-2">
+            <div
+              /* todo : add action to book reservation */
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Prendre un rendez-vous</h2>
+                <p className="text-xs">Réservez une date avec votre garage.</p>
+              </div>
+            </div>
+            <div
+              onClick={() => handleCardClick("profile")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Consulter mes infos</h2>
+                <p className="text-xs">
+                  Voir mon profil utilisateur et mes véhicules.
+                </p>
+              </div>
+            </div>
+            <div
+              onClick={() => handleCardClick("stack")}
+              className="card card-compact bg-base-100 shadow hover:shadow-lg cursor-pointer transition"
+            >
+              <div className="card-body">
+                <h2 className="card-title text-sm">Voir mes rendez-vous</h2>
+                <p className="text-xs">
+                  Liste des rendez-vous passés et futurs.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <p className="bg-gray-100 p-4 rounded-3xl text-xs text-black-200 mb-2 opacity-80">
             Veuillez-nous renseigner votre problème : bruits moteurs, voyants,
             quel types de prestations vous voulez : vidange, contrôle technique,
