@@ -37,7 +37,7 @@ class Person implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 25)]
-    #[Assert\Choice(choices: ['Mr','Mme','Companie'])]
+    #[Assert\Choice(choices: ['M','Mme','Companie'])]
     private ?string $title = null;
 
     #[ORM\Column(length: 255)]
