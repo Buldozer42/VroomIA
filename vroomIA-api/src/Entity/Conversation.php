@@ -77,8 +77,6 @@ class Conversation
     public function conversationToPayload() {
         $messages = [];
 
-        // $messages[] = getInitPayload();
-
         foreach ($this->getMessages() as $message) {
             $messages[] = $message->messageToPayload();
         }

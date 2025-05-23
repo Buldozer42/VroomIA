@@ -8,27 +8,43 @@ import { addGarageEntry } from "../store/slices/garageSlice";
 import { addAppointment } from "../store/slices/appointmentsSlice";
 import { addVehicle } from "../store/slices/vehiclesSlice";
 import { addOperation } from "../store/slices/operationsSlice";
-import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice"; 
+import { closeDrawer, DrawerType, openDrawer } from "../store/slices/uiSlice";
 import { RootState } from "../store/store";
+import ReactMarkdown from "react-markdown";
 
 const ChatComponent = () => {
   const dispatch = useDispatch();
-
+  const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState<{ role: string; text: string }[]>(
     []
   );
   const [input, setInput] = useState("");
-
+  const hasFetchedRef = useRef(false);
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
-  const { drawerOpen, selectedTab } = useSelector((state: RootState) => state.ui);
-
+  const { drawerOpen, selectedTab } = useSelector(
+    (state: RootState) => state.ui
+  );
+  const [isConfirmStep, setIsConfirmStep] = useState(false);
+  const AnimatedDots = () => {
+    const [dots, setDots] = React.useState("");
+  
+    React.useEffect(() => {
+      const interval = setInterval(() => {
+        setDots((prev) => (prev.length >= 3 ? "" : prev + "."));
+      }, 500);
+      return () => clearInterval(interval);
+    }, []);
+  
+    return <span className="text-gray-500 text-sm">Veuillez patientez{dots}</span>;
+  };
+  
   const steps: Step[] = [
     {
       target: ".chat-screen",
       content:
-        "Bienvenue sur VroomIA, votre assistant intelligent de gestion automobile.",
+        "Bienvenue sur VroomIA, votre assistant intelligent de prise de rendez-vous pour votre véhicule automobile.",
     },
     {
       target: ".chat-message",
@@ -137,6 +153,9 @@ const ChatComponent = () => {
     hasFetchedRef.current = true;
 
     const fetchConversation = async () => {
+      if (hasFetchedRef.current) return;
+
+      hasFetchedRef.current = true;
       try {
         const response = await fetch("http://localhost:8000/api/gemini/conversation/new", {
           method: "POST",
@@ -195,88 +214,104 @@ const ChatComponent = () => {
     );
   };
 
- const handleSend = async () => {
-  if (!input.trim()) return;
+  const handleSend = async (text?: string) => {
+    const message = text ?? input;
+    setLoading(true); // <-- start loading
+    const newMessages = [...messages, { role: "user", text: message }];
+    setMessages(newMessages);
+    setInput("");
 
-  const newMessages = [...messages, { role: "user", text: input }];
-  setMessages(newMessages);
-  setInput("");
+    try {
+      const response = await fetch(
+        "http://localhost:8000/api/gemini/message/send",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({
+            messageContent: message,
+            conversationId: conversationId,
+          }),
+        }
+      );
 
-  try {
-    const response = await fetch("http://localhost:8000/api/gemini/message/send", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-      },
-      body: JSON.stringify({
-        messageContent: input,
-        conversationId: conversationId,
-      }),
-    });
+      const data = await response.json();
 
-    const data = await response.json();
-
-    if (data.error) {
-      console.error("Erreur :", data.error);
+      if (data.error) {
+        console.error("Erreur :", data.error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            text: "❌ Une erreur est survenue lors de la réponse du serveur.",
+          },
+        ]);
+      } else {
+        console.log("Réponse du backend:", data.geminiResponse);
+        setMessages((prev) => [
+          ...prev,
+          { role: "bot", text: data.geminiResponse },
+        ]);
+        if (data.geminiResponse.includes("Étape de confirmation")) {
+          setIsConfirmStep(true);
+        } else {
+          setIsConfirmStep(false);
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'envoi au backend:", error);
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: "❌ Une erreur est survenue lors de la réponse du serveur." },
+        {
+          role: "bot",
+          text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL.",
+        },
       ]);
-    } else {
-      console.log("Réponse du backend:", data.geminiResponse);
+    } finally {
+      setLoading(false); // <-- stop loading
+    }
+
+    // 🔁 Logique locale (simulations)
+    const lowerInput = message.toLowerCase();
+    const keywords = [
+      "vidange",
+      "contrôle technique",
+      "révision",
+      "carrosserie",
+      "diagnostic moteur",
+    ];
+
+    const matched = keywords.find((word) => lowerInput.includes(word));
+
+    if (matched) {
+      simulateSingleOperationAdd(matched);
+      return;
+    } else if (lowerInput.includes("garage")) {
+      simulateGarageAdd();
       setMessages((prev) => [
         ...prev,
-        { role: "bot", text: data.geminiResponse },
+        { role: "bot", text: "Garage ajouté ! ✅" },
+      ]);
+    } else if (lowerInput.includes("rendez-vous")) {
+      simulateAppointmentAdd();
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
+      ]);
+    } else if (lowerInput.includes("véhicule")) {
+      simulateVehicleAdd();
+      setMessages((prev) => [
+        ...prev,
+        { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
       ]);
     }
-  } catch (error) {
-    console.error("Erreur lors de l'envoi au backend:", error);
-    setMessages((prev) => [
-      ...prev,
-      { role: "bot", text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL." },
-    ]);
-  }
-
-  // 🔁 Logique locale (simulations)
-  const lowerInput = input.toLowerCase();
-  const keywords = [
-    "vidange",
-    "contrôle technique",
-    "révision",
-    "carrosserie",
-    "diagnostic moteur",
-  ];
-
-  const matched = keywords.find((word) => lowerInput.includes(word));
-
-  if (matched) {
-    simulateSingleOperationAdd(matched);
-    return;
-  } else if (lowerInput.includes("garage")) {
-    simulateGarageAdd();
-    setMessages((prev) => [
-      ...prev,
-      { role: "bot", text: "Garage ajouté ! ✅" },
-    ]);
-  } else if (lowerInput.includes("rendez-vous")) {
-    simulateAppointmentAdd();
-    setMessages((prev) => [
-      ...prev,
-      { role: "bot", text: "Rendez-vous ajouté ! 📅✅" },
-    ]);
-  } else if (lowerInput.includes("véhicule")) {
-    simulateVehicleAdd();
-    setMessages((prev) => [
-      ...prev,
-      { role: "bot", text: "Véhicule ajouté ! 🚗✅" },
-    ]);
-  }
-};
-
+  };
 
   // ===➡️ Clics sur les cartes : dispatch vers Redux
   const handleCardClick = (tab: DrawerType) => {
+    console.log(tab);
     if (drawerOpen && selectedTab === tab) {
       dispatch(closeDrawer());
       setTimeout(() => {
@@ -285,6 +320,87 @@ const ChatComponent = () => {
     } else {
       dispatch(openDrawer(tab));
     }
+  };
+
+  const LineButtonConfirm = () => {
+    const onConfirm = async () => {
+      setIsConfirmStep(false);
+      try {
+        const response = await fetch(
+          "http://localhost:8000/api/gemini/message/confirm",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              conversationId: conversationId,
+            }),
+          }
+        );
+
+        const data = await response.json();
+
+        if (data.error) {
+          console.error("Erreur :", data.error);
+          setMessages((prev) => [
+            ...prev,
+            {
+              role: "bot",
+              text: "❌ Une erreur est survenue lors de la réponse du serveur.",
+            },
+          ]);
+        }
+        console.log(data);
+      } catch (error) {
+        console.log("Erreur lors de l'envoi au backend:", error);
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "bot",
+            text: "❌ Impossible de contacter le serveur. Vérifiez la connexion ou l'URL.",
+          },
+        ]);
+      }
+    };
+
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "flex-end",
+          flexDirection: "row",
+          gap: 10,
+        }}
+      >
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6
+          rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
+          space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 
+          focus:ring-green-300 focus:ring-opacity-75"
+          onClick={async () => {
+            await onConfirm();
+            handleSend("Oui");
+          }}
+        >
+          <span>✅</span>
+          <span>Oui</span>
+        </button>
+        <button
+          className="bg-red-500 hover:bg-red-600  text-white font-bold py-3 px-6 
+          rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center 
+          space-x-2 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-red-300 
+          focus:ring-opacity-75"
+          onClick={() => {
+            handleSend("Non");
+          }}
+        >
+          <span>❌</span>
+          <span>Non</span>
+        </button>
+      </div>
+    );
   };
 
   return (
@@ -329,10 +445,18 @@ const ChatComponent = () => {
                       : "bg-white-500 text-black"
                   }`}
                 >
-                  {msg.text}
+                  <ReactMarkdown>{msg.text}</ReactMarkdown>
                 </div>
               </div>
             ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="rounded-3xl px-4 py-2 max-w-xs bg-white shadow flex items-center">
+                  <AnimatedDots />
+                </div>
+              </div>
+            )}
             <div ref={messagesEndRef} />
           </div>
 
@@ -377,24 +501,28 @@ const ChatComponent = () => {
             etc.
           </p>
 
-          <div className="relative w-full chat-message">
-            <input
-              type="text"
-              className="input input-bordered w-full pr-10 outline-none focus:outline-none border-gray-200 chat-input"
-              placeholder="Écris ton message..."
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button
-              onClick={handleSend}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
-              disabled={!input.trim()}
-              aria-label="Envoyer le message"
-            >
-              <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
-            </button>
-          </div>
+          {isConfirmStep ? (
+            <LineButtonConfirm />
+          ) : (
+            <div className="relative w-full chat-message">
+              <input
+                type="text"
+                className="input input-bordered w-full pr-10 outline-none focus:outline-none border-gray-200 chat-input"
+                placeholder="Écris ton message..."
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSend()}
+              />
+              <button
+                onClick={() => handleSend()}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary send-button"
+                disabled={!input.trim()}
+                aria-label="Envoyer le message"
+              >
+                <PaperAirplaneIcon className="w-5 h-5 rotate-45" />
+              </button>
+            </div>
+          )}
         </div>
       </main>
     </>

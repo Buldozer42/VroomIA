@@ -51,7 +51,7 @@ const StepperComponent = () => {
     {
       target: ".stepper-vehicule-garage",
       content:
-        "Fournissez-nous les informations sur votre véhicule préféré et un concessionnaire proche ou préféré.",
+        "Au fil de la discussion des informations sur votre véhicule et ceux d'un concessionnaire proche et/ou préféré seront pré-remplies.",
     },
     {
       target: ".stepper-panier",

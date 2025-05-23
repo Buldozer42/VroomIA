@@ -1,20 +1,21 @@
-'use client';
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
+import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
-  const [title, setTitle] = useState('M');
+  const [title, setTitle] = useState("M");
 
   // États pour tous les champs du formulaire
-  const [firstname, setFirstname] = useState('');
-  const [lastname, setLastname] = useState('');
-  const [phone, setPhone] = useState('');
-  const [company, setCompany] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [firstname, setFirstname] = useState("");
+  const [lastname, setLastname] = useState("");
+  const [phone, setPhone] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   // Fonction de gestion du submit
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: { preventDefault: () => void; }) => {
     e.preventDefault();
 
     const formData = {
@@ -27,41 +28,48 @@ export default function LoginPage() {
             firstname,
             lastname,
             phone,
-            ...(title === 'société' ? { company } : {}),
+            ...(title === "société" ? { company } : {}),
           }),
     };
 
     // Exemple d'URL (à remplacer par ton endpoint réel)
     const url = isLogin
-      ? 'http://localhost:8000/api/login'
-      : 'http://localhost:8000/api/register';
+      ? "http://localhost:8000/api/login"
+      : "http://localhost:8000/api/register";
 
     try {
       const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
       const result = await response.json();
 
       if (response.ok) {
-        console.log('Succès :', result);
+        console.log("Succès :", result);
         // Par exemple, rediriger ou stocker token ici
       } else {
-        console.error('Erreur :', result.message);
+        console.error("Erreur :", result.message);
       }
     } catch (error) {
-      console.error('Erreur réseau :', error);
+      console.error("Erreur réseau :", error);
     }
   };
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Left side */}
-      <div className="w-full md:w-5/12 bg-gradient-to-br from-indigo-600 to-blue-500 text-white flex flex-col justify-center items-start px-10 py-20">
-        <h1 className="text-5xl font-extrabold italic mb-6">VroomIA</h1>
-        <p className="text-2xl leading-relaxed max-w-md">
+      <div
+        className="relative w-full md:w-5/12 bg-cover bg-center bg-no-repeat text-white px-10 py-20 flex flex-col justify-center items-start"
+        style={{ backgroundImage: "url('/images/screen-vroomia.webp')" }} // remplace par ton image
+      >
+        <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
+        <div className="flex flex-row">
+          <h1 className="text-5xl font-extrabold italic m-auto z-100">VroomIA</h1>
+          <ChatBubbleLeftRightIcon className="w-15 m-auto z-100" />
+        </div>
+        <p className="text-2xl leading-relaxed max-w-md z-100">
           La première IA pour simplifier <br />
           votre prise de rendez-vous <br />
           automobile — rapide, intelligente <br />
@@ -73,7 +81,7 @@ export default function LoginPage() {
       <div className="w-full md:w-7/12 flex items-center justify-center px-6 py-12 bg-white">
         <div className="w-full max-w-md space-y-6">
           <h2 className="text-3xl font-bold italic text-gray-800 text-center">
-            {isLogin ? 'Se connecter' : 'Créer un compte'}
+            {isLogin ? "Se connecter" : "Créer un compte"}
           </h2>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -138,10 +146,10 @@ export default function LoginPage() {
                 </div>
 
                 {/* Company name (only if société) */}
-                {title === 'société' && (
+                {title === "société" && (
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nom de l'entreprise
+                      Nom de l&apos;entreprise
                     </label>
                     <input
                       type="text"
@@ -187,12 +195,12 @@ export default function LoginPage() {
               type="submit"
               className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300"
             >
-              {isLogin ? 'Se connecter' : 'Créer un compte'}
+              {isLogin ? "Se connecter" : "Créer un compte"}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600">
-            {isLogin ? "Pas de compte ?" : "Vous avez déjà un compte ?"}{' '}
+            {isLogin ? "Pas de compte ?" : "Vous avez déjà un compte ?"}{" "}
             <button
               type="button"
               onClick={() => setIsLogin(!isLogin)}
