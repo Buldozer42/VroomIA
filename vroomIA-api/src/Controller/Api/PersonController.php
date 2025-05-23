@@ -20,9 +20,6 @@ class PersonController extends AbstractController
     public function getUserReservations(Request $request, EntityManagerInterface $em, TokenStorageInterface $tokenStorage): JsonResponse
     {
         $token = $tokenStorage->getToken();
-        if (!$token) {
-            return $this->json(['error' => 'Non authentifié'], 401);
-        }
         $user = $token->getUser();
         if (!$user instanceof Person) {
             return $this->json(['error' => 'Utilisateur invalide'], 401);
@@ -115,5 +112,22 @@ class PersonController extends AbstractController
                 'id' => $user->getId()
             ]
         ], 201);
+    }
+
+    #[Route('/person', name: '_person', methods: ['POST'])]
+    public function getUserData(TokenStorageInterface $tokenStorage): JsonResponse
+    {
+        $token = $tokenStorage->getToken();
+        $user = $token->getUser();
+        if (!$user instanceof Person) {
+            return $this->json(['error' => 'Utilisateur invalide'], 401);
+        }
+        $response = [
+            'first_name' => $user->getFirstname(),
+            'last_name' => $user->getLastname(),
+            'address' => $user->getAdress(),
+            'phoneNumber' => $user->getPhoneNumber(),
+        ];
+        return $this->json($response, 201);
     }
 }
