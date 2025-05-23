@@ -131,7 +131,11 @@ const ChatComponent = () => {
   };
 
   const [conversationId, setConversationId] = useState("");
+  const hasFetchedRef = useRef(false);
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
     const fetchConversation = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/gemini/conversation/new", {
@@ -141,7 +145,7 @@ const ChatComponent = () => {
             "Content-Type": "application/json",
           },
           credentials: 'include',
-          body: JSON.stringify({ personId: 14}),
+          body: JSON.stringify({ personId: 43 }),
         });
 
         const data = await response.json();
@@ -149,8 +153,8 @@ const ChatComponent = () => {
           console.error("Erreur du backend:", data.error);
         } else {
           console.log("Réponse du backend:", data.conversationId);
+          setConversationId(data.conversationId);
         }
-        setConversationId(data.conversationId);
       } catch (error) {
         console.error("Erreur lors de la récupération des messages:", error);
       }

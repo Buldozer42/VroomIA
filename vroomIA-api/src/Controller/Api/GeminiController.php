@@ -6,11 +6,12 @@ use App\Entity\Conversation;
 use App\Entity\Person;
 use App\Entity\Message;
 use App\Entity\Role;
+use App\Entity\Vehicle;
 use App\Repository\ConversationRepository;
 use App\Repository\PersonRepository;
+use App\Repository\VehicleRepository;
 use App\Service\GeminiService;
 use App\Service\JsonSerializerService;
-use App\Service\SyncService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,12 +23,10 @@ class GeminiController extends AbstractController
 {
     private $geminiService;
     private $jsonSerializerService;
-    private $syncService;
     private $entityManager;
 
-    public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager, SyncService $syncService)
+    public function __construct(GeminiService $geminiService, JsonSerializerService $jsonSerializerService, EntityManagerInterface $entityManager)
     {
-        $this->syncService = $syncService;
         $this->entityManager = $entityManager;
         $this->geminiService = $geminiService;
         $this->jsonSerializerService = $jsonSerializerService;
@@ -187,5 +186,34 @@ class GeminiController extends AbstractController
         } catch (\Exception $e) {
             return $this->json(['error' => 'Une erreur est survenue: ' . $e->getMessage()], 500);
         }
+    }
+
+    #[Route('/gemini/test/jsonSerialize', name: 'gemini_test_jsonSerialize', methods: ['POST'])]
+    public function jsonSerialize(
+        Request $request,
+        PersonRepository $personRepository,
+        VehicleRepository $vehicleRepository
+    ): JsonResponse
+    {
+        $jsonData = $request->getContent();
+        $entityConfigs = [
+            'persons' => [
+                'class' => Person::class,
+                'repository' => $personRepository,
+                'identifier' => 'email'
+            ],
+            'vehicles' => [
+                'class' => Vehicle::class,
+                'repository' => $vehicleRepository,
+            ]
+        ];
+        $res = $this->jsonSerializerService->processEntities(
+            $jsonData,
+            $entityConfigs,
+        );
+
+        return $this->json([
+            'res' => $res,
+        ]);
     }
 }
