@@ -1,12 +1,13 @@
 "use client";
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChatBubbleLeftRightIcon } from "@heroicons/react/24/outline";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [isLogin, setIsLogin] = useState(true);
   const [title, setTitle] = useState("M");
 
-  // États pour tous les champs du formulaire
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [phone, setPhone] = useState("");
@@ -14,12 +15,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  // Fonction de gestion du submit
-  const handleSubmit = async (e: { preventDefault: () => void; }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
     const formData = {
-      title,
       email,
       password,
       ...(isLogin
@@ -32,7 +36,6 @@ export default function LoginPage() {
           }),
     };
 
-    // Exemple d'URL (à remplacer par ton endpoint réel)
     const url = isLogin
       ? "http://localhost:8000/api/login"
       : "http://localhost:8000/api/register";
@@ -47,13 +50,21 @@ export default function LoginPage() {
       const result = await response.json();
 
       if (response.ok) {
-        console.log("Succès :", result);
-        // Par exemple, rediriger ou stocker token ici
+        // Stocker le token JWT dans le localStorage
+        if (result.token) {
+          localStorage.setItem("token", result.token);
+        }
+      
+        // Rediriger vers la page d'accueil
+        router.push("/home");
       } else {
-        console.error("Erreur :", result.message);
+        // ❌ Erreur renvoyée par l'API
+        setError(result.message || "Une erreur est survenue.");
       }
-    } catch (error) {
-      console.error("Erreur réseau :", error);
+    } catch (err) {
+      setError(`Erreur réseau: ${err}. Veuillez réessayer.`);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -62,7 +73,7 @@ export default function LoginPage() {
       {/* Left side */}
       <div
         className="relative w-full md:w-5/12 bg-cover bg-center bg-no-repeat text-white px-10 py-20 flex flex-col justify-center items-start"
-        style={{ backgroundImage: "url('/images/screen-vroomia.webp')" }} // remplace par ton image
+        style={{ backgroundImage: "url('/images/screen-vroomia.webp')" }}
       >
         <div className="absolute inset-0 bg-black opacity-50 z-0"></div>
         <div className="flex flex-row">
@@ -84,14 +95,16 @@ export default function LoginPage() {
             {isLogin ? "Se connecter" : "Créer un compte"}
           </h2>
 
+          {/* ✅ Message d'erreur */}
+          {error && (
+            <div className="text-red-600 text-sm text-center">{error}</div>
+          )}
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             {!isLogin && (
               <>
-                {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Titre
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Titre</label>
                   <select
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
@@ -103,11 +116,8 @@ export default function LoginPage() {
                   </select>
                 </div>
 
-                {/* Firstname */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Prénom
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
                   <input
                     type="text"
                     value={firstname}
@@ -117,11 +127,8 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* Lastname */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nom
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Nom</label>
                   <input
                     type="text"
                     value={lastname}
@@ -131,11 +138,8 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* Phone number */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Numéro de téléphone
-                  </label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Numéro de téléphone</label>
                   <input
                     type="tel"
                     value={phone}
@@ -145,12 +149,9 @@ export default function LoginPage() {
                   />
                 </div>
 
-                {/* Company name (only if société) */}
                 {title === "société" && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Nom de l&apos;entreprise
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Nom de l&apos;entreprise</label>
                     <input
                       type="text"
                       value={company}
@@ -163,11 +164,8 @@ export default function LoginPage() {
               </>
             )}
 
-            {/* Email */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Adresse mail
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Adresse mail</label>
               <input
                 type="email"
                 value={email}
@@ -177,11 +175,8 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Mot de passe
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mot de passe</label>
               <input
                 type="password"
                 value={password}
@@ -193,9 +188,16 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300"
+              disabled={loading}
+              className="w-full bg-indigo-600 text-white py-2 rounded-lg font-semibold hover:bg-indigo-700 transition duration-300 disabled:opacity-50"
             >
-              {isLogin ? "Se connecter" : "Créer un compte"}
+              {loading
+                ? isLogin
+                  ? "Connexion en cours..."
+                  : "Création du compte..."
+                : isLogin
+                ? "Se connecter"
+                : "Créer un compte"}
             </button>
           </form>
 

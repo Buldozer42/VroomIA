@@ -107,6 +107,15 @@ const Drawer = () => {
           <>
             <h2 className="text-2xl font-bold mb-4">Déconnexion</h2>
             <p>Êtes-vous sûr de vouloir vous déconnecter ?</p>
+            <button
+              onClick={() => {
+                localStorage.removeItem("token"); // Supprimer le JWT
+                window.location.href = "/login"; // Rediriger vers /login
+              }}
+              className="btn bg-red-400 mt-4 rounded-md"
+            >
+              Se déconnecter
+            </button>
           </>
         );
       case "stepper":
