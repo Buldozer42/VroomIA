@@ -16,47 +16,6 @@ use Symfony\Component\Validator\Validator\ValidatorInterface;
 #[Route('/api', name: 'api')]
 class PersonController extends AbstractController
 {
-    #[Route('/person/reservations', name: '_person_reservations', methods: ['POST'])]
-    public function getUserReservations(Request $request, EntityManagerInterface $em, TokenStorageInterface $tokenStorage): JsonResponse
-    {
-        $token = $tokenStorage->getToken();
-        $user = $token->getUser();
-        if (!$user instanceof Person) {
-            return $this->json(['error' => 'Utilisateur invalide'], 401);
-        }
-
-        $reservations = $em->getRepository(Reservation::class)->findBy(['person' => $user]);
-        
-        $formattedReservations = [];
-        foreach ($reservations as $reservation) {
-            $garage = $reservation->getGarage();
-            $formattedOperations = [];
-
-            foreach ($reservation->getOperations() as $operation) {
-                $formattedOperations[] = [
-                    'name' => $operation->getName(),
-                    'duration' => $operation->getDuration(),
-                    'price' => $operation->getPrice()
-                ];
-            }
-
-            $formattedReservations[] = [
-                'id' => $reservation->getId(),
-                'start_date' => $reservation->getStartDate()->format('d/m/Y'),
-                'end_date' => $reservation->getEndDate()->format('d/m/Y'),
-                'price' => $reservation->getPrice(),
-                'comment' => $reservation->getComment(),
-                'description' => $reservation->getDescription(),
-                'garage_name' => $garage->getName(),
-                'garage_adress' => $garage->getAdress(),
-                'garage_phone' => $garage->getPhoneNumber(),
-                'operations' => $formattedOperations // Ajout du tableau des opérations
-            ];
-        }
-
-        return $this->json($formattedReservations,201);
-    }
-
     #[Route('/person/register', name: '_person_register', methods: ['POST'])]
     public function register(Request $request, UserPasswordHasherInterface $passwordHasher, EntityManagerInterface $em, ValidatorInterface $validator): JsonResponse
     {
@@ -115,18 +74,49 @@ class PersonController extends AbstractController
     }
 
     #[Route('/person', name: '_person', methods: ['POST'])]
-    public function getUserData(TokenStorageInterface $tokenStorage): JsonResponse
+    public function getUserData(TokenStorageInterface $tokenStorage, EntityManagerInterface $em): JsonResponse
     {
         $token = $tokenStorage->getToken();
         $user = $token->getUser();
         if (!$user instanceof Person) {
             return $this->json(['error' => 'Utilisateur invalide'], 401);
         }
+        $reservations = $em->getRepository(Reservation::class)->findBy(['person' => $user]);
+
+        $formattedReservations = [];
+        foreach ($reservations as $reservation) {
+            $garage = $reservation->getGarage();
+            $formattedOperations = [];
+
+            foreach ($reservation->getOperations() as $operation) {
+                $formattedOperations[] = [
+                    'name' => $operation->getName(),
+                    'duration' => $operation->getDuration(),
+                    'price' => $operation->getPrice()
+                ];
+            }
+
+            $formattedReservations[] = [
+                'id' => $reservation->getId(),
+                'start_date' => $reservation->getStartDate()->format('d/m/Y'),
+                'end_date' => $reservation->getEndDate()->format('d/m/Y'),
+                'price' => $reservation->getPrice(),
+                'comment' => $reservation->getComment(),
+                'description' => $reservation->getDescription(),
+                'garage_name' => $garage->getName(),
+                'garage_adress' => $garage->getAdress(),
+                'garage_phone' => $garage->getPhoneNumber(),
+                'operations' => $formattedOperations // Ajout du tableau des opérations
+            ];
+        }
         $response = [
-            'first_name' => $user->getFirstname(),
-            'last_name' => $user->getLastname(),
-            'address' => $user->getAdress(),
-            'phoneNumber' => $user->getPhoneNumber(),
+            'user' => [
+                'first_name' => $user->getFirstname(),
+                'last_name' => $user->getLastname(),
+                'address' => $user->getAdress(),
+                'phoneNumber' => $user->getPhoneNumber(),
+            ],
+            'reservations' => $formattedReservations
         ];
         return $this->json($response, 201);
     }
