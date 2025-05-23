@@ -54,7 +54,7 @@ class PersonController extends AbstractController
             $user->setTitle($data['title']);
         }
         if (isset($data['phone'])) {
-            $user->setPhoneNumber($data['phoneNumber']);
+            $user->setPhoneNumber($data['phone']);
         }
 
         // Validation de l'entité
