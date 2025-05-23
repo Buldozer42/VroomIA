@@ -24,6 +24,7 @@ export default function LoginPage() {
     setLoading(true);
 
     const formData = {
+      title,
       email,
       password,
       ...(isLogin

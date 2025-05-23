@@ -53,7 +53,7 @@ class PersonController extends AbstractController
         if (isset($data['title'])) {
             $user->setTitle($data['title']);
         }
-        if (isset($data['phoneNumber'])) {
+        if (isset($data['phone'])) {
             $user->setPhoneNumber($data['phoneNumber']);
         }
 
